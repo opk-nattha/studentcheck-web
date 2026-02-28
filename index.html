@@ -53,8 +53,7 @@
             z-index: 1; 
 
             /* 1. จัดการความกว้างแบบยืดหยุ่น */
-            width: 100%; 
-            max-width: 500px; /* ล็อกขนาดสูงสุดไว้ที่ 500px กำลังสวยสำหรับแอปแนวตั้ง */
+            width: 100%;
             margin: 20px; /* บังคับเว้นระยะจากขอบจอทุกด้าน 20px เสมอ (จะได้เห็นพื้นหลัง) */
 
             /* 2. จัดการความสูงไม่ให้ล้นจอ */
@@ -87,6 +86,22 @@
             justify-content: center;
             align-items: center;
             min-height: 200px; /* กำหนดความสูงขั้นต่ำไว้ก่อน */
+        }
+
+        /* ตกแต่ง Scrollbar ให้ดูสวยงามเข้ากับธีมแอป (เฉพาะ Chrome/Safari) */
+        .student-list-area::-webkit-scrollbar {
+            width: 8px;
+        }
+        .student-list-area::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 10px;
+        }
+        .student-list-area::-webkit-scrollbar-thumb {
+            background: #cbd5e0; 
+            border-radius: 10px;
+        }
+        .student-list-area::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0; 
         }
         
     </style>
