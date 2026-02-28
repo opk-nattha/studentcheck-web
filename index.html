@@ -46,36 +46,47 @@
         }
 
         .app-container {
-            background-color: #ffffff; /* กรอบสีขาว */
-            
-            /* บังพื้นหลังบ้าง แต่ไม่หมด: กำหนดให้กว้าง 90% แต่ไม่เกิน 600px */
-            width: 90%; 
-            max-width: 600px; 
-            
-            /* ทำให้กรอบสูงขึ้น แต่เหลือขอบบน-ล่างไว้โชว์พื้นหลัง (80vh = 80% ของจอ) */
-            min-height: 80vh; 
-            
-            /* เส้นขอบเล็กๆ สีกรมท่า (Navy Blue) */
+            background-color: #ffffff; 
             border: 2px solid #1a365d; 
-            
-            border-radius: 20px; /* มุมโค้งมนนิดๆ ดูละมุน */
-            padding: 30px; /* ระยะห่างขอบด้านใน */
-            
-            /* ใส่เงาบางๆ ให้กล่องลอยขึ้นมาจากพื้นหลัง */
+            border-radius: 20px; 
             box-shadow: 0 12px 35px rgba(26, 54, 93, 0.15); 
             z-index: 1; 
 
-            /* จัดเรียงของข้างในให้อยู่ตรงกลาง */
+            /* 1. จัดการความกว้างแบบยืดหยุ่น */
+            width: 100%; 
+            max-width: 500px; /* ล็อกขนาดสูงสุดไว้ที่ 500px กำลังสวยสำหรับแอปแนวตั้ง */
+            margin: 20px; /* บังคับเว้นระยะจากขอบจอทุกด้าน 20px เสมอ (จะได้เห็นพื้นหลัง) */
+
+            /* 2. จัดการความสูงไม่ให้ล้นจอ */
+            max-height: 90vh; /* สูงสุดได้แค่ 90% ของหน้าจอ */
+            
+            /* 3. จัดเลย์เอาต์ภายใน */
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: column; /* เรียงของจากบนลงล่าง */
+            padding: 25px; 
         }
 
         h1 {
-            color: #1a365d; /* สีตัวหนังสือเข้ากับสีกรอบ */
+            color: #1a365d; 
             text-align: center;
             font-weight: 600;
-            margin-bottom: 30px; /* ดันให้ห่างจากปุ่มรายชื่อที่จะตามมา */
+            margin-bottom: 20px; 
+            flex-shrink: 0; /* ป้องกันไม่ให้หัวข้อยุบตัวเวลารายชื่อยาว */
+        }
+
+        .student-list-area {
+            width: 100%;
+            flex-grow: 1; /* ยืดพื้นที่นี้ให้เต็มกล่องที่เหลือ */
+            overflow-y: auto; /* ถ้ารายชื่อยาวเกิน ให้เกิดแถบ Scrollbar เฉพาะตรงนี้ */
+            padding-right: 10px; /* เว้นที่ด้านขวานิดนึงไม่ให้ Scrollbar ทับข้อความ */
+            
+            /* ตกแต่งชั่วคราวให้เห็นพื้นที่ */
+            border: 1px dashed #cbd5e0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px; /* กำหนดความสูงขั้นต่ำไว้ก่อน */
         }
         
     </style>
