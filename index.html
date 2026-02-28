@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แอพเช็คชื่อ - Level 1 (HTML/CSS)</title>
+    <style>
+        /* ส่วนนี้คือ CSS ใช้สำหรับตกแต่งหน้าตา (ทาสีบ้าน) */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            background-color: white;
+            max-width: 400px;
+            margin: 0 auto; /* จัดให้อยู่กึ่งกลางหน้าจอ */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        /* ตกแต่งรายชื่อนักเรียน */
+        .student-item {
+            background-color: #e0e0e0; /* สีเทาคือสถานะ ขาด */
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #ccc;
+        }
+
+        /* สมมติว่านี่คือหน้าตาตอนที่นักเรียน "มาเรียน" (สีเขียว) */
+        .student-item.present {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .export-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h2>📝 เช็คชื่อเข้าเรียน</h2>
+        <p>หน้าตาจำลอง (ยังกดไม่ได้)</p>
+
+        <div class="student-item">1. สมชาย รักเรียน (ขาด)</div>
+        
+        <div class="student-item present">2. สมหญิง จริงใจ (มาเรียน)</div>
+        
+        <div class="student-item">3. มานะ อดทน (ขาด)</div>
+
+        <button class="export-btn">⬇️ บันทึกรูปภาพ</button>
+    </div>
+
+</body>
+</html>
