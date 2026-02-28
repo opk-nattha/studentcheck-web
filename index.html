@@ -65,45 +65,6 @@
             padding: 25px; 
         }
 
-        h1 {
-            color: #1a365d; 
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 20px; 
-            flex-shrink: 0; /* ป้องกันไม่ให้หัวข้อยุบตัวเวลารายชื่อยาว */
-        }
-
-        .student-list-area {
-            width: 100%;
-            flex-grow: 1; /* ยืดพื้นที่นี้ให้เต็มกล่องที่เหลือ */
-            overflow-y: auto; /* ถ้ารายชื่อยาวเกิน ให้เกิดแถบ Scrollbar เฉพาะตรงนี้ */
-            padding-right: 10px; /* เว้นที่ด้านขวานิดนึงไม่ให้ Scrollbar ทับข้อความ */
-            
-            /* ตกแต่งชั่วคราวให้เห็นพื้นที่ */
-            border: 1px dashed #cbd5e0;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 200px; /* กำหนดความสูงขั้นต่ำไว้ก่อน */
-        }
-
-        /* ตกแต่ง Scrollbar ให้ดูสวยงามเข้ากับธีมแอป (เฉพาะ Chrome/Safari) */
-        .student-list-area::-webkit-scrollbar {
-            width: 8px;
-        }
-        .student-list-area::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-            border-radius: 10px;
-        }
-        .student-list-area::-webkit-scrollbar-thumb {
-            background: #cbd5e0; 
-            border-radius: 10px;
-        }
-        .student-list-area::-webkit-scrollbar-thumb:hover {
-            background: #a0aec0; 
-        }
-        
     </style>
 </head>
 <body>
