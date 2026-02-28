@@ -72,9 +72,59 @@
             padding: 25px; 
         }
 
+        /* ==========================================
+           ตกแต่งหน้าจอ Splash Screen
+           ========================================== */
+        #splash-screen {
+            position: fixed; /* บังคับให้ลอยทับทุกอย่างบนหน้าจอ */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f0f4f8; /* สีพื้นหลังของหน้าโหลด (เปลี่ยนได้ตามชอบ) */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* ดันให้อยู่ชั้นบนสุด ทับทุกสิ่ง */
+            
+            /* สั่งให้หน้าจอโหลดจางหายไปเมื่อเวลาผ่านไป 3.5 วินาที */
+            animation: hideSplash 3.5s ease-in-out forwards;
+        }
+
+        .splash-logo {
+            width: 180px; /* ปรับขนาดโลโก้ตอนเปิดแอปตามต้องการ */
+            opacity: 0; /* เริ่มต้นให้โลโก้มองไม่เห็น */
+            
+            /* สั่งให้โลโก้ ค่อยๆ สว่างขึ้น แล้วจางลง ในเวลา 3 วินาที */
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
+
+        /* -------------------------------------
+           คิวถ่ายทำแอนิเมชัน (Keyframes)
+           ------------------------------------- */
+        
+        /* แอนิเมชันสำหรับตัวโลโก้ */
+        @keyframes fadeInOut {
+            0%   { opacity: 0; transform: scale(0.9); } /* เริ่มต้น: ล่องหน และหดตัวนิดนึง */
+            20%  { opacity: 1; transform: scale(1); }   /* วินาทีที่ 0.6: สว่างเต็มที่ ขนาดปกติ */
+            80%  { opacity: 1; transform: scale(1); }   /* ค้างความสว่างไว้ให้คนมองเห็น */
+            100% { opacity: 0; transform: scale(1.1); } /* ตอนจบ: ล่องหน และขยายตัวออกนิดนึง */
+        }
+
+        /* แอนิเมชันสำหรับพื้นหลังหน้าโหลด */
+        @keyframes hideSplash {
+            0%   { opacity: 1; visibility: visible; }
+            85%  { opacity: 1; visibility: visible; }   /* รอให้โลโก้แสดงให้เสร็จก่อน */
+            100% { opacity: 0; visibility: hidden; }    /* ล่องหน และหลบทางให้เรากดปุ่มในแอปได้ */
+        }
+
     </style>
 </head>
 <body>
+    <div id="splash-screen">
+        <img src="intro-logo.png" alt="Intro Logo" class="splash-logo">
+    </div>
+    
     <svg class="bg-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
             <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
