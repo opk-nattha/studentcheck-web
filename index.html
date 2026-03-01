@@ -20,15 +20,12 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&display=swap');
-        
-        /* 1. รีเซ็ตค่าเริ่มต้นของเบราว์เซอร์ให้ตรงกันทุกเครื่อง */
-        * {
+        {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        /* 2. ตั้งค่าพื้นหลังของหน้าเว็บ (body) */
         body {
             font-family: 'Chakra Petch';
             background: linear-gradient(180deg, #5ed0e6 0%, #0078a6 100%);
@@ -49,30 +46,24 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; /* ดันไปอยู่หลังสุด */
-            opacity: 0.6; /* ปรับความโปร่งใสไม่ให้กวนสายตา */
+            z-index: -1;
+            opacity: 0.6;
         }
-        /* -------------------------------------
-           🔥 กรอบสีขาวขนาดใหญ่ สไตล์ตามที่คุณต้องการ
-           ------------------------------------- */
+        /* ==========================================
+           กรอบสีขาวขนาดใหญ่
+           ========================================== */
         .app-container {
             background-color: #ffffff; 
             border: 2px solid #1a365d; 
             border-radius: 20px; 
             box-shadow: 0 12px 35px rgba(26, 54, 93, 0.15); 
             z-index: 1; 
-
-            /* 1. จัดการความกว้างแบบยืดหยุ่น */
             width: 90%;
             max-width: 512px;
-            margin: 20px; /* บังคับเว้นระยะจากขอบจอทุกด้าน 20px เสมอ (จะได้เห็นพื้นหลัง) */
-
-            /* 2. จัดการความสูงไม่ให้ล้นจอ */
-            height: 95dvh; /* สูงสุดได้แค่ 80% ของหน้าจอ */
-            
-            /* 3. จัดเลย์เอาต์ภายใน */
+            margin: 20px;
+            height: 95dvh;
             display: flex;
-            flex-direction: column; /* เรียงของจากบนลงล่าง */
+            flex-direction: column;
             padding: 25px;
         }
 
@@ -80,91 +71,54 @@
            ตกแต่งหน้าจอ Splash Screen
            ========================================== */
         #splash-screen {
-            position: fixed; /* บังคับให้ลอยทับทุกอย่างบนหน้าจอ */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f0f4f8; /* สีพื้นหลังของหน้าโหลด (เปลี่ยนได้ตามชอบ) */
+            background-color: #f0f4f8;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999; /* ดันให้อยู่ชั้นบนสุด ทับทุกสิ่ง */
-            
-            /* สั่งให้หน้าจอโหลดจางหายไปเมื่อเวลาผ่านไป 3.5 วินาที */
+            z-index: 9999;
             animation: hideSplash 3.5s ease-in-out forwards;
         }
 
         .splash-logo {
-            width: 512px; /* ปรับขนาดโลโก้ตอนเปิดแอปตามต้องการ */
-            opacity: 0; /* เริ่มต้นให้โลโก้มองไม่เห็น */
-            
-            /* สั่งให้โลโก้ ค่อยๆ สว่างขึ้น แล้วจางลง ในเวลา 3 วินาที */
+            width: 512px;
+            opacity: 0;
             animation: fadeInOut 3s ease-in-out forwards;
         }
 
-        /* -------------------------------------
-           คิวถ่ายทำแอนิเมชัน (Keyframes)
-           ------------------------------------- */
+        /* ==========================================
+           คิวแอนิเมชัน
+           ========================================== */
         
         /* แอนิเมชันสำหรับตัวโลโก้ */
         @keyframes fadeInOut {
-            0%   { opacity: 0; transform: scale(0.9); } /* เริ่มต้น: ล่องหน และหดตัวนิดนึง */
-            20%  { opacity: 1; transform: scale(1); }   /* วินาทีที่ 0.6: สว่างเต็มที่ ขนาดปกติ */
-            80%  { opacity: 1; transform: scale(1); }   /* ค้างความสว่างไว้ให้คนมองเห็น */
-            100% { opacity: 0; transform: scale(1.1); } /* ตอนจบ: ล่องหน และขยายตัวออกนิดนึง */
+            0%   { opacity: 0; transform: scale(0.9); }
+            20%  { opacity: 1; transform: scale(1); }
+            80%  { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.1); }
         }
 
         /* แอนิเมชันสำหรับพื้นหลังหน้าโหลด */
         @keyframes hideSplash {
             0%   { opacity: 1; visibility: visible; }
-            85%  { opacity: 1; visibility: visible; }   /* รอให้โลโก้แสดงให้เสร็จก่อน */
-            100% { opacity: 0; visibility: hidden; }    /* ล่องหน และหลบทางให้เรากดปุ่มในแอปได้ */
+            85%  { opacity: 1; visibility: visible; }
+            100% { opacity: 0; visibility: hidden; }
         }
 
         /* ==========================================
            iPhone SE2
            ========================================== */
-        @media screen and (max-width: 768px) {
-            
-            /* 1. ย่อขนาดโลโก้ Splash Screen ลงมาครึ่งนึง */
-            .splash-logo {
-                width: 256px; 
-            }
-
-            /* 2. ปรับกล่องแอปให้ขอบมนน้อยลง และลดระยะห่าง (Padding/Margin) */
+        @media screen and (max-width: 750px) {
             .app-container {
-                border-radius: 8px; /* จากเดิม 20px เหลือ 4px */
-                padding: 16px; /* พื้นที่ข้างในกล่องแคบลง */
-                margin: 4px; /* ชิดขอบจอมือถือมากขึ้น */
-                max-height: 85vh; /* สูงสุดได้แค่ 90% ของหน้าจอ */
-            }
-
-            /* 3. ลดขนาดตัวอักษรหัวข้อ */
-            h1 {
-                font-size: 20px;     /* ให้ฟอนต์เล็กลงพอดีจอมือถือ */
-                margin-bottom: 16px; 
+                border-radius: 12px;
+                padding: 16px;
+                height: 92dvh; /* บนมือถือยอมให้สูงขึ้นอีกนิด */
             }
         }
-          /* ==========================================
-           iPad A16
-           ========================================== */
-        @media screen and (max-width: 1640px) {
-            
-            /* 1. ย่อขนาดโลโก้ Splash Screen ลงมาครึ่งนึง */
-            .splash-logo {
-                width: 512px; 
-            }
-
-            /* 2. ปรับกล่องแอปให้ขอบมนน้อยลง และลดระยะห่าง (Padding/Margin) */
-            .app-container {
-                border-radius: 20px; /* จากเดิม 20px เหลือ 4px */
-                padding: 24px; /* พื้นที่ข้างในกล่องแคบลง */
-                margin: 20px; /* ชิดขอบจอมือถือมากขึ้น */
-                max-height: 90vh; /* สูงสุดได้แค่ 90% ของหน้าจอ */
-            }
-        }
-
     </style>
 </head>
 <body>
