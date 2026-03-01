@@ -32,7 +32,7 @@
         body {
             font-family: 'Chakra Petch';
             background: linear-gradient(180deg, #5ed0e6 0%, #0078a6 100%);
-            min-height: 100vh;
+            height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: top;
@@ -63,16 +63,17 @@
             z-index: 1; 
 
             /* 1. จัดการความกว้างแบบยืดหยุ่น */
-            width: 100%;
+            width: 90%;
+            max-width: 512px;
             margin: 20px; /* บังคับเว้นระยะจากขอบจอทุกด้าน 20px เสมอ (จะได้เห็นพื้นหลัง) */
 
             /* 2. จัดการความสูงไม่ให้ล้นจอ */
-            max-height: 80vh; /* สูงสุดได้แค่ 80% ของหน้าจอ */
+            height: 95dvh; /* สูงสุดได้แค่ 80% ของหน้าจอ */
             
             /* 3. จัดเลย์เอาต์ภายใน */
             display: flex;
             flex-direction: column; /* เรียงของจากบนลงล่าง */
-            padding: 25px; 
+            padding: 25px;
         }
 
         /* ==========================================
