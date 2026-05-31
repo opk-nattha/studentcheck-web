@@ -7,7 +7,6 @@ import { STUDENTS, CLASS_INFO, STATUS_COLORS } from './config.js';
 
 const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
-// ─── Status labels / colors ───
 const LABEL = {
   'มา':         'มา',
   'ลา':         'ลา',
@@ -21,9 +20,7 @@ const BG = {
   'ไม่ได้เช็ค': '#f1f5f9',
 };
 
-// FIX 3: ย้าย iOS detection มาไว้ระดับ module (คำนวณครั้งเดียว)
-// ของเดิม: คำนวณซ้ำ 40 ครั้งในลูปนักเรียน ทุกครั้งที่ render
-// FIX 4: เปลี่ยนจาก navigator.platform (deprecated) เป็น userAgent + maxTouchPoints
+// iOS detection — คำนวณครั้งเดียวระดับ module
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (/Mac/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
@@ -39,9 +36,6 @@ function showToast(msg) {
 }
 
 // ─── Main export ───
-// FIX 5: แก้การ download บน iOS Safari
-// ของเดิม: a.download + a.click() → iOS Safari ไม่รองรับ ไม่มีอะไรเกิดขึ้น
-// แก้ใหม่: ใช้ Web Share API ถ้ามี, ไม่งั้นเปิด tab ใหม่ให้กดค้างบันทึก
 export async function captureAndDownload(manager) {
   showToast('⏳ กำลังสร้างภาพ...');
   try {
@@ -65,7 +59,6 @@ export async function captureAndDownload(manager) {
               showToast('✅ แชร์เรียบร้อย!');
               return;
             } catch (shareErr) {
-              // ผู้ใช้กด Cancel — ไม่ต้อง fallback
               if (shareErr.name === 'AbortError') {
                 showToast('ยกเลิกการแชร์');
                 return;
@@ -73,7 +66,7 @@ export async function captureAndDownload(manager) {
             }
           }
         }
-        // Fallback: เปิด blob ใน tab ใหม่ แล้วแจ้งให้ผู้ใช้กดค้างเพื่อบันทึก
+        // Fallback: เปิด blob ใน tab ใหม่ ให้กดค้างบันทึก
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
         showToast('📸 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"');
@@ -97,7 +90,17 @@ export async function captureAndDownload(manager) {
   }
 }
 
-// ─── Build canvas ───
+// ─── Helper: วาดข้อความกึ่งกลาง (แก้บั๊ก iPad) ───────────────────────────
+// ctx.textAlign='center' ทำงานผิดปกติบน iPad Safari กับฟอนต์ไทย
+// วิธีแก้: ใช้ textAlign='left' ตลอด แล้วชดเชย x ด้วย measureText() เอง
+function fillTextCenter(ctx, text, x, y) {
+  const savedAlign = ctx.textAlign;
+  ctx.textAlign = 'left';
+  ctx.fillText(text, x - ctx.measureText(text).width / 2, y);
+  ctx.textAlign = savedAlign;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function buildCanvas(manager) {
   const COLS     = 8;
   const CELL_W   = 120;
@@ -108,7 +111,6 @@ function buildCanvas(manager) {
   const GRID_W   = COLS * CELL_W;
   const GRID_X   = (W - GRID_W) / 2;
 
-  // Heights
   const H_HDR    = 110;
   const H_COUNTS = 100;
   const H_TOP3   = 90;
@@ -124,6 +126,10 @@ function buildCanvas(manager) {
   const ctx      = canvas.getContext('2d');
   ctx.scale(SCALE, SCALE);
 
+  // default state ที่ชัดเจน — ไม่ให้เหลือค่า center ค้างจากที่อื่น
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'alphabetic';
+
   // ── Background ──
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, H);
@@ -133,19 +139,18 @@ function buildCanvas(manager) {
   // ── Header ──
   ctx.fillStyle = '#f8fafc';
   ctx.fillRect(0, y, W, H_HDR);
-  // bottom border
   ctx.fillStyle = '#e2e8f0';
   ctx.fillRect(0, y + H_HDR - 2, W, 2);
 
-  ctx.fillStyle = '#1e293b';
-  ctx.font      = 'bold 26px Prompt, Sarabun, sans-serif';
+  ctx.fillStyle    = '#1e293b';
+  ctx.font         = 'bold 26px Prompt, Sarabun, sans-serif';
   ctx.textBaseline = 'middle';
+  ctx.textAlign    = 'left';
   ctx.fillText('รายงานการเข้าแถว', PAD, y + H_HDR / 2 - 12);
   ctx.font      = '18px Prompt, Sarabun, sans-serif';
   ctx.fillStyle = '#64748b';
   ctx.fillText(`${CLASS_INFO.name} — ${CLASS_INFO.subtitle}`, PAD, y + H_HDR / 2 + 16);
 
-  // date right side
   const now     = new Date();
   const dd      = String(now.getDate()).padStart(2,'0');
   const mo      = String(now.getMonth()+1).padStart(2,'0');
@@ -155,23 +160,24 @@ function buildCanvas(manager) {
   const dateStr = `${dd}/${mo}/${yr}`;
   const dayStr  = `วัน${THAI_DAYS[now.getDay()]}  ${hh}:${mm} น.`;
 
-  ctx.fillStyle   = '#1e293b';
-  ctx.font        = 'bold 28px Prompt, Sarabun, sans-serif';
-  ctx.textAlign   = 'right';
+  // ด้านขวา: ยังใช้ textAlign='right' ได้ปกติ (ข้อความซ้ายชิดขอบขวา ไม่ใช่กึ่งกลาง)
+  ctx.fillStyle = '#1e293b';
+  ctx.font      = 'bold 28px Prompt, Sarabun, sans-serif';
+  ctx.textAlign = 'right';
   ctx.fillText(dateStr, W - PAD, y + H_HDR / 2 - 12);
-  ctx.font        = '16px Prompt, Sarabun, sans-serif';
-  ctx.fillStyle   = '#64748b';
+  ctx.font      = '16px Prompt, Sarabun, sans-serif';
+  ctx.fillStyle = '#64748b';
   ctx.fillText(dayStr, W - PAD, y + H_HDR / 2 + 16);
-  ctx.textAlign   = 'left';
+  ctx.textAlign = 'left';
   y += H_HDR;
 
   // ── Count bar ──
-  const counts   = manager.getCounts();
+  const counts     = manager.getCounts();
   const countItems = [
-    { label:'มา',         val: counts['มา']         || 0, color: STATUS_COLORS['มา'],         bg:'#e8fdf1', lc:'#00994f' },
-    { label:'ลา',         val: counts['ลา']         || 0, color: STATUS_COLORS['ลา'],         bg:'#fff8e6', lc:'#cc8d00' },
-    { label:'ขาด',        val: counts['ขาด']        || 0, color: STATUS_COLORS['ขาด'],        bg:'#fff0f0', lc:'#cc3f3f' },
-    { label:'ไม่เช็ค',   val: counts['ไม่ได้เช็ค'] || 0, color: '#64748b',                   bg:'#f1f5f9', lc:'#475569' },
+    { label:'มา',       val: counts['มา']         || 0, color: STATUS_COLORS['มา'],   bg:'#e8fdf1', lc:'#00994f' },
+    { label:'ลา',       val: counts['ลา']         || 0, color: STATUS_COLORS['ลา'],   bg:'#fff8e6', lc:'#cc8d00' },
+    { label:'ขาด',      val: counts['ขาด']        || 0, color: STATUS_COLORS['ขาด'],  bg:'#fff0f0', lc:'#cc3f3f' },
+    { label:'ไม่เช็ค', val: counts['ไม่ได้เช็ค'] || 0, color: '#64748b',             bg:'#f1f5f9', lc:'#475569' },
   ];
   const segW = W / countItems.length;
   countItems.forEach((item, i) => {
@@ -181,27 +187,29 @@ function buildCanvas(manager) {
       ctx.fillStyle = '#e2e8f0';
       ctx.fillRect((i + 1) * segW - 1, y, 1, H_COUNTS);
     }
-    ctx.fillStyle   = item.color;
-    ctx.font        = `bold 42px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center';
-    ctx.textBaseline= 'middle';
-    ctx.fillText(String(item.val), i * segW + segW / 2, y + H_COUNTS / 2 - 10);
-    ctx.fillStyle   = item.lc;
-    ctx.font        = `16px Prompt, Sarabun, sans-serif`;
-    ctx.fillText(item.label, i * segW + segW / 2, y + H_COUNTS / 2 + 22);
+    const cx = i * segW + segW / 2;
+    // ตัวเลข
+    ctx.fillStyle    = item.color;
+    ctx.font         = `bold 42px Prompt, Sarabun, sans-serif`;
+    ctx.textBaseline = 'middle';
+    fillTextCenter(ctx, String(item.val), cx, y + H_COUNTS / 2 - 10);
+    // label
+    ctx.fillStyle = item.lc;
+    ctx.font      = `16px Prompt, Sarabun, sans-serif`;
+    fillTextCenter(ctx, item.label, cx, y + H_COUNTS / 2 + 22);
   });
-  ctx.textAlign    = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#e2e8f0';
   ctx.fillRect(0, y + H_COUNTS - 1, W, 1);
   y += H_COUNTS;
 
   // ── Top 3 ──
-  ctx.fillStyle = '#f8fafc';
+  ctx.fillStyle    = '#f8fafc';
   ctx.fillRect(0, y, W, H_TOP3);
-  ctx.fillStyle   = '#64748b';
-  ctx.font        = 'bold 14px Prompt, Sarabun, sans-serif';
-  ctx.textBaseline= 'middle';
+  ctx.fillStyle    = '#64748b';
+  ctx.font         = 'bold 14px Prompt, Sarabun, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign    = 'left';
   ctx.fillText('มาก่อน', PAD, y + H_TOP3 / 2);
 
   const presentSorted = manager.getSortedPresent();
@@ -216,8 +224,9 @@ function buildCanvas(manager) {
     roundRect(ctx, rx, y + 14, rankW, H_TOP3 - 28, 10);
     ctx.fill(); ctx.stroke();
 
-    ctx.font        = '22px sans-serif';
-    ctx.textBaseline= 'middle';
+    ctx.font         = '22px sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign    = 'left';
     ctx.fillText(medals[i], rx + 12, y + H_TOP3 / 2);
 
     if (i < presentSorted.length) {
@@ -243,9 +252,10 @@ function buildCanvas(manager) {
   y += H_TOP3;
 
   // ── Section label ──
-  ctx.fillStyle   = '#64748b';
-  ctx.font        = 'bold 13px Prompt, Sarabun, sans-serif';
-  ctx.textBaseline= 'middle';
+  ctx.fillStyle    = '#64748b';
+  ctx.font         = 'bold 13px Prompt, Sarabun, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign    = 'left';
   ctx.fillText('รายชื่อนักเรียน (เรียงตามลำดับการมา)', GRID_X, y + H_LABEL / 2);
   ctx.textBaseline = 'alphabetic';
   y += H_LABEL;
@@ -253,10 +263,7 @@ function buildCanvas(manager) {
   // ── Student grid ──
   const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
   const sorted     = [...presentSorted, ...nonPresent];
-
-  // FIX 3 (ต่อ): ลบ isIOS detection ออกจาก loop — ย้ายไปไว้ระดับ module แล้ว
-  // คำนวณ iosOffset ครั้งเดียวนอกลูป
-  const iosOffset = isIOS ? -6 : 0;
+  const iosOffset  = isIOS ? -6 : 0;
 
   sorted.forEach((s, idx) => {
     const rec   = manager.getRecord(s.id);
@@ -283,65 +290,63 @@ function buildCanvas(manager) {
     // Draw student figure
     drawFigure(ctx, cx + CELL_W / 2, cy + 46, 20, color);
 
-    // Arrival order badge (if present)
+    // Arrival order badge
     if (rec.status === 'มา') {
       const order = presentSorted.findIndex(p => p.id === s.id) + 1;
       ctx.beginPath();
       ctx.arc(cx + CELL_W - 18, cy + 18, 11, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.fillStyle   = 'white';
-      ctx.font        = 'bold 11px sans-serif';
-      ctx.textAlign   = 'center';
-      ctx.textBaseline= 'middle';
-      ctx.fillText(String(order), cx + CELL_W - 18, cy + 18);
-      ctx.textAlign   = 'left';
-      ctx.textBaseline= 'alphabetic';
+      ctx.fillStyle    = 'white';
+      ctx.font         = 'bold 11px sans-serif';
+      ctx.textBaseline = 'middle';
+      // badge อยู่ตำแหน่งที่แน่นอน ไม่ต้องกึ่งกลาง — ใช้ fillTextCenter ให้ตรง
+      fillTextCenter(ctx, String(order), cx + CELL_W - 18, cy + 18);
+      ctx.textBaseline = 'alphabetic';
     }
 
-    // Student number (เลขที่)
-    ctx.fillStyle   = '#64748b';
-    ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center';
-    ctx.textBaseline= 'middle';
-    ctx.fillText(`เลขที่ ${s.id}`, cx + CELL_W / 2, cy + 104 + iosOffset);
+    // ── ข้อความในการ์ด: ใช้ fillTextCenter ทั้งหมด ──
+    // แก้บั๊ก iPad: textAlign='center' ทำให้ข้อความเบี่ยงขวา
+    // fillTextCenter วัด measureText() แล้วชดเชย x เอง → กึ่งกลางถูกต้องทุกแพล็ตฟอร์ม
 
-    // Status label
-    ctx.fillStyle   = color;
-    ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center';
-    ctx.textBaseline= 'middle';
-    ctx.fillText(label, cx + CELL_W / 2, cy + 116 + iosOffset);
+    const midX = cx + CELL_W / 2;
 
-    // Reason (if any)
+    // เลขที่
+    ctx.fillStyle    = '#64748b';
+    ctx.font         = `bold 11px Prompt, Sarabun, sans-serif`;
+    ctx.textBaseline = 'middle';
+    fillTextCenter(ctx, `เลขที่ ${s.id}`, midX, cy + 104 + iosOffset);
+
+    // สถานะ
+    ctx.fillStyle = color;
+    ctx.font      = `bold 11px Prompt, Sarabun, sans-serif`;
+    fillTextCenter(ctx, label, midX, cy + 116 + iosOffset);
+
+    // หมายเหตุ
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
       ctx.font      = `10px Prompt, Sarabun, sans-serif`;
-      ctx.textAlign   = 'center';
-      ctx.textBaseline= 'middle';
-      ctx.fillText(clip(ctx, rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 128 + iosOffset);
+      fillTextCenter(ctx, clip(ctx, rec.reason, CELL_W - 16), midX, cy + 128 + iosOffset);
     }
 
-    ctx.textAlign   = 'left';
-    ctx.textBaseline= 'alphabetic';
+    ctx.textBaseline = 'alphabetic';
   });
   y += rows * CELL_H + PAD;
 
   // ── Footer ──
-  ctx.fillStyle   = '#94A3B8';
-  ctx.font        = '13px Prompt, Sarabun, sans-serif';
-  ctx.textAlign   = 'center';
-  ctx.fillText(`Student Check — ${CLASS_INFO.name}`, W / 2, y + 24);
-  ctx.textAlign   = 'left';
+  ctx.fillStyle    = '#94A3B8';
+  ctx.font         = '13px Prompt, Sarabun, sans-serif';
+  ctx.textBaseline = 'middle';
+  fillTextCenter(ctx, `Student Check — ${CLASS_INFO.name}`, W / 2, y + 24);
+  ctx.textBaseline = 'alphabetic';
 
   return canvas;
 }
 
-// ─── Draw simple student figure (head + body) ───
+// ─── Draw simple student figure ───
 function drawFigure(ctx, cx, cy, r, color) {
   const dark = shadeHex(color, -30);
 
-  // Body
   ctx.beginPath();
   ctx.moveTo(cx - r * 0.75, cy + r * 2.4);
   ctx.bezierCurveTo(cx - r * 0.75, cy + r * 1.35, cx - r * 0.4, cy + r, cx, cy + r);
@@ -350,25 +355,21 @@ function drawFigure(ctx, cx, cy, r, color) {
   ctx.fillStyle = color;
   ctx.fill();
 
-  // Head
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fillStyle = color;
   ctx.fill();
 
-  // Hair
   ctx.beginPath();
   ctx.moveTo(cx - r * 0.6, cy - r * 0.1);
   ctx.quadraticCurveTo(cx, cy - r * 1.2, cx + r * 0.6, cy - r * 0.1);
   ctx.fillStyle = dark;
   ctx.fill();
 
-  // Eyes
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.beginPath(); ctx.arc(cx - r * 0.35, cy - r * 0.05, r * 0.22, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + r * 0.35, cy - r * 0.05, r * 0.22, 0, Math.PI * 2); ctx.fill();
 
-  // Smile
   ctx.beginPath();
   ctx.moveTo(cx - r * 0.3, cy + r * 0.35);
   ctx.quadraticCurveTo(cx, cy + r * 0.65, cx + r * 0.3, cy + r * 0.35);
@@ -402,21 +403,14 @@ function shadeHex(hex, pct) {
   return '#' + ((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
 }
 
-// FIX 6: แก้ clip() ให้ใช้ canvas measureText จริงๆ
-// ของเดิม: clip(text, maxPx) ไม่ได้ใช้ maxPx เลย — ตัดแค่ 10 ตัวอักษรตายตัว
-// แก้ใหม่: วัดความกว้างจริงด้วย ctx.measureText แล้วตัดตามขนาดพื้นที่จริง
 function clip(ctx, text, maxPx) {
   if (ctx.measureText(text).width <= maxPx) return text;
-  let lo = 0, hi = text.length;
   const ellipsis = '…';
   const ellW = ctx.measureText(ellipsis).width;
+  let lo = 0, hi = text.length;
   while (lo < hi) {
     const mid = Math.floor((lo + hi + 1) / 2);
-    if (ctx.measureText(text.slice(0, mid)).width + ellW <= maxPx) {
-      lo = mid;
-    } else {
-      hi = mid - 1;
-    }
+    ctx.measureText(text.slice(0, mid)).width + ellW <= maxPx ? (lo = mid) : (hi = mid - 1);
   }
   return lo === 0 ? ellipsis : text.slice(0, lo) + ellipsis;
 }
