@@ -63,7 +63,7 @@ html, body {
 /* ─── App Layout ─── */
 #app {
   display: flex; flex-direction: column;
-  height: 100dvh; height: 100vh;
+  height: 100vh; height: 100dvh; /* FIX: fallback ก่อน, preferred หลัง — ของเดิมสลับกัน */
   overflow: hidden;
 }
 

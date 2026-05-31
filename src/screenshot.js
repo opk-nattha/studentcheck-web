@@ -21,6 +21,12 @@ const BG = {
   'ไม่ได้เช็ค': '#f1f5f9',
 };
 
+// FIX 3: ย้าย iOS detection มาไว้ระดับ module (คำนวณครั้งเดียว)
+// ของเดิม: คำนวณซ้ำ 40 ครั้งในลูปนักเรียน ทุกครั้งที่ render
+// FIX 4: เปลี่ยนจาก navigator.platform (deprecated) เป็น userAgent + maxTouchPoints
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (/Mac/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
 // ─── Toast ───
 let _toastTimer = null;
 function showToast(msg) {
@@ -33,27 +39,57 @@ function showToast(msg) {
 }
 
 // ─── Main export ───
+// FIX 5: แก้การ download บน iOS Safari
+// ของเดิม: a.download + a.click() → iOS Safari ไม่รองรับ ไม่มีอะไรเกิดขึ้น
+// แก้ใหม่: ใช้ Web Share API ถ้ามี, ไม่งั้นเปิด tab ใหม่ให้กดค้างบันทึก
 export async function captureAndDownload(manager) {
   showToast('⏳ กำลังสร้างภาพ...');
   try {
-    // รอ font โหลด
     await document.fonts.ready;
 
     const canvas = buildCanvas(manager);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      const now = new Date();
-      const dd  = String(now.getDate()).padStart(2,'0');
-      const mo  = String(now.getMonth()+1).padStart(2,'0');
-      const y   = now.getFullYear();
-      a.href     = url;
-      a.download = `เช็คชื่อเข้าแถววันที่_${dd}_${mo}_${y}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('✅ บันทึกเรียบร้อย!');
+    const now = new Date();
+    const dd  = String(now.getDate()).padStart(2, '0');
+    const mo  = String(now.getMonth() + 1).padStart(2, '0');
+    const y   = now.getFullYear();
+    const filename = `เช็คชื่อเข้าแถววันที่_${dd}_${mo}_${y}.png`;
+
+    canvas.toBlob(async blob => {
+      if (isIOS) {
+        // iOS: ลอง Web Share API ก่อน (iOS 15+)
+        if (navigator.share && navigator.canShare) {
+          const file = new File([blob], filename, { type: 'image/png' });
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: 'Student Check' });
+              showToast('✅ แชร์เรียบร้อย!');
+              return;
+            } catch (shareErr) {
+              // ผู้ใช้กด Cancel — ไม่ต้อง fallback
+              if (shareErr.name === 'AbortError') {
+                showToast('ยกเลิกการแชร์');
+                return;
+              }
+            }
+          }
+        }
+        // Fallback: เปิด blob ใน tab ใหม่ แล้วแจ้งให้ผู้ใช้กดค้างเพื่อบันทึก
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        showToast('📸 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } else {
+        // Android / Desktop: download ปกติ
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('✅ บันทึกเรียบร้อย!');
+      }
     }, 'image/png');
   } catch (err) {
     console.error('Capture error:', err);
@@ -67,23 +103,22 @@ function buildCanvas(manager) {
   const CELL_W   = 120;
   const CELL_H   = 140;
   const PAD      = 40;
-  const W        = 1080;
+  const W        = 1024;
   const rows     = Math.ceil(STUDENTS.length / COLS);
   const GRID_W   = COLS * CELL_W;
   const GRID_X   = (W - GRID_W) / 2;
 
   // Heights
-  const H_HDR    = 110;   // header
-  const H_COUNTS = 100;   // count bar
-  const H_TOP3   = 90;    // top 3
-  const H_LABEL  = 50;    // section label
+  const H_HDR    = 110;
+  const H_COUNTS = 100;
+  const H_TOP3   = 90;
+  const H_LABEL  = 50;
   const H_GRID   = rows * CELL_H + PAD;
   const H_FOOT   = 50;
   const H        = H_HDR + H_COUNTS + H_TOP3 + H_LABEL + H_GRID + H_FOOT;
 
   const canvas   = document.createElement('canvas');
-
-  const SCALE = 4;
+  const SCALE    = 4;
   canvas.width   = W * SCALE;
   canvas.height  = H * SCALE;
   const ctx      = canvas.getContext('2d');
@@ -140,28 +175,23 @@ function buildCanvas(manager) {
   ];
   const segW = W / countItems.length;
   countItems.forEach((item, i) => {
-    // bg
     ctx.fillStyle = item.bg;
     ctx.fillRect(i * segW, y, segW, H_COUNTS);
-    // right border
     if (i < countItems.length - 1) {
       ctx.fillStyle = '#e2e8f0';
       ctx.fillRect((i + 1) * segW - 1, y, 1, H_COUNTS);
     }
-    // number
     ctx.fillStyle   = item.color;
     ctx.font        = `bold 42px Prompt, Sarabun, sans-serif`;
     ctx.textAlign   = 'center';
     ctx.textBaseline= 'middle';
     ctx.fillText(String(item.val), i * segW + segW / 2, y + H_COUNTS / 2 - 10);
-    // label
     ctx.fillStyle   = item.lc;
     ctx.font        = `16px Prompt, Sarabun, sans-serif`;
     ctx.fillText(item.label, i * segW + segW / 2, y + H_COUNTS / 2 + 22);
   });
   ctx.textAlign    = 'left';
   ctx.textBaseline = 'alphabetic';
-  // bottom border
   ctx.fillStyle = '#e2e8f0';
   ctx.fillRect(0, y + H_COUNTS - 1, W, 1);
   y += H_COUNTS;
@@ -180,7 +210,6 @@ function buildCanvas(manager) {
   const rankX0 = PAD + 80;
   for (let i = 0; i < 3; i++) {
     const rx = rankX0 + i * (rankW + 10);
-    // box
     ctx.fillStyle   = i < presentSorted.length ? '#e8fdf1' : '#f1f5f9';
     ctx.strokeStyle = i < presentSorted.length ? '#00BF63' : '#e2e8f0';
     ctx.lineWidth   = 1.5;
@@ -196,7 +225,7 @@ function buildCanvas(manager) {
       const name = s.realName || `เลขที่ ${s.id}`;
       ctx.fillStyle = '#1e293b';
       ctx.font      = `bold 16px Prompt, Sarabun, sans-serif`;
-      ctx.fillText(clip(name, rankW - 70), rx + 44, y + H_TOP3 / 2);
+      ctx.fillText(clip(ctx, name, rankW - 70), rx + 44, y + H_TOP3 / 2);
       if (i === 0) {
         ctx.fillStyle = '#00BF63';
         ctx.font      = 'bold 12px Prompt, Sarabun, sans-serif';
@@ -224,6 +253,10 @@ function buildCanvas(manager) {
   // ── Student grid ──
   const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
   const sorted     = [...presentSorted, ...nonPresent];
+
+  // FIX 3 (ต่อ): ลบ isIOS detection ออกจาก loop — ย้ายไปไว้ระดับ module แล้ว
+  // คำนวณ iosOffset ครั้งเดียวนอกลูป
+  const iosOffset = isIOS ? -6 : 0;
 
   sorted.forEach((s, idx) => {
     const rec   = manager.getRecord(s.id);
@@ -266,34 +299,27 @@ function buildCanvas(manager) {
       ctx.textBaseline= 'alphabetic';
     }
 
-// 💡 1. เช็กอัตโนมัติว่าเป็น iPad หรือตระกูล iOS/Mac หรือไม่
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-    // 💡 2. กำหนดค่าชดเชยระยะแนวตั้ง (Offset) ถ้าเป็น iPad ขยับขึ้น -6 พิกเซล ถ้า Windows เป็น 0
-    const iosOffset = isIOS ? -6 : 0;
-
     // Student number (เลขที่)
     ctx.fillStyle   = '#64748b';
     ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางตรงนี้
+    ctx.textAlign   = 'center';
     ctx.textBaseline= 'middle';
     ctx.fillText(`เลขที่ ${s.id}`, cx + CELL_W / 2, cy + 104 + iosOffset);
 
-    // Status label (มา / ลา / ขาด / ไม่เช็ค)
+    // Status label
     ctx.fillStyle   = color;
     ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางซ้ำตรงนี้ป้องกัน iPad เอ๋อ
+    ctx.textAlign   = 'center';
     ctx.textBaseline= 'middle';
     ctx.fillText(label, cx + CELL_W / 2, cy + 116 + iosOffset);
 
-    // Reason (if any) (เหตุผลเพิ่มเติม)
+    // Reason (if any)
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
       ctx.font      = `10px Prompt, Sarabun, sans-serif`;
-      ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางตรงนี้ด้วย
+      ctx.textAlign   = 'center';
       ctx.textBaseline= 'middle';
-      ctx.fillText(clip(rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 128 + iosOffset);
+      ctx.fillText(clip(ctx, rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 128 + iosOffset);
     }
 
     ctx.textAlign   = 'left';
@@ -376,7 +402,21 @@ function shadeHex(hex, pct) {
   return '#' + ((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
 }
 
-// clip text to max pixel width
-function clip(text, maxPx) {
-  return text.length > 10 ? text.substring(0, 9) + '…' : text;
+// FIX 6: แก้ clip() ให้ใช้ canvas measureText จริงๆ
+// ของเดิม: clip(text, maxPx) ไม่ได้ใช้ maxPx เลย — ตัดแค่ 10 ตัวอักษรตายตัว
+// แก้ใหม่: วัดความกว้างจริงด้วย ctx.measureText แล้วตัดตามขนาดพื้นที่จริง
+function clip(ctx, text, maxPx) {
+  if (ctx.measureText(text).width <= maxPx) return text;
+  let lo = 0, hi = text.length;
+  const ellipsis = '…';
+  const ellW = ctx.measureText(ellipsis).width;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi + 1) / 2);
+    if (ctx.measureText(text.slice(0, mid)).width + ellW <= maxPx) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return lo === 0 ? ellipsis : text.slice(0, lo) + ellipsis;
 }
