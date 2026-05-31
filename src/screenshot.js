@@ -270,27 +270,28 @@ function buildCanvas(manager) {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    // 💡 2. กำหนดค่าชดเชยระยะ (Offset) ถ้าเป็น iPad ให้ขยับคำขึ้นไป -6 พิกเซล ถ้าเป็น Windows ให้เป็น 0
+    // 💡 2. กำหนดค่าชดเชยระยะแนวตั้ง (Offset) ถ้าเป็น iPad ขยับขึ้น -6 พิกเซล ถ้า Windows เป็น 0
     const iosOffset = isIOS ? -6 : 0;
 
-    // Student number
+    // Student number (เลขที่)
     ctx.fillStyle   = '#64748b';
     ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textAlign   = 'center';
+    ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางตรงนี้
     ctx.textBaseline= 'middle';
-    // บวกค่า iosOffset เข้าไปที่ตำแหน่งแนวตั้ง (cy)
     ctx.fillText(`เลขที่ ${s.id}`, cx + CELL_W / 2, cy + 104 + iosOffset);
 
-    // Status label
+    // Status label (มา / ลา / ขาด / ไม่เช็ค)
     ctx.fillStyle   = color;
     ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
-    ctx.textBaseline= 'middle'; // ใส่ไว้เพื่อความชัวร์ให้เท่ากันทั้งสองค่าย
+    ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางซ้ำตรงนี้ป้องกัน iPad เอ๋อ
+    ctx.textBaseline= 'middle';
     ctx.fillText(label, cx + CELL_W / 2, cy + 116 + iosOffset);
 
-    // Reason (if any)
+    // Reason (if any) (เหตุผลเพิ่มเติม)
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
       ctx.font      = `10px Prompt, Sarabun, sans-serif`;
+      ctx.textAlign   = 'center'; // 📌 บังคับจัดกลางตรงนี้ด้วย
       ctx.textBaseline= 'middle';
       ctx.fillText(clip(rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 128 + iosOffset);
     }
