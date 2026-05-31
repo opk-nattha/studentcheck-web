@@ -1,1 +1,35 @@
+/* style.css */
+/* ─── Reset & Variables ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #ffffff;
+  --c-surface: #f8fafc;
+  --c-border: #e2e8f0;
+  --c-text: #1e293b;
+  --c-muted: #64748b;
+  --c-present: #00BF63;
+  --c-absent: #FF4F4F;
+  --c-leave: #FFB000;
+  --c-unchecked: #94A3B8;
+  --c-present-bg: #e8fdf1;
+  --c-absent-bg: #fff0f0;
+  --c-leave-bg: #fff8e6;
+  --c-unchecked-bg: #f1f5f9;
+  --r-card: 14px;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.10);
+  --transition: 0.18s ease;
+  --font: 'Prompt', sans-serif;
+}
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-bg);
+  font-family: var(--font);
+  color: var(--c-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* นำ CSS ส่วนที่เหลือทั้งหมดจากไฟล์เดิมของคุณมาวางต่อที่นี่ให้ครบ... */
+/* ... (Splash Screen, App Layout, Header, Top 3 Section, Main Scrollable Content, Student Grid, Student Card, Capture Panel, Responsive Rules) ... */
