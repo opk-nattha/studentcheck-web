@@ -265,7 +265,7 @@ function buildCanvas(manager) {
   // ── Student grid ──
   const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
   const sorted     = [...presentSorted, ...nonPresent];
-  const iosOffset  = isIOS ? -6 : 0;
+  const iosOffset  = isIOS ? -8 : 0;
 
   sorted.forEach((s, idx) => {
     const rec   = manager.getRecord(s.id);
