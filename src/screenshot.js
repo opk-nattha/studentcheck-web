@@ -265,7 +265,6 @@ function buildCanvas(manager) {
   // ── Student grid ──
   const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
   const sorted     = [...presentSorted, ...nonPresent];
-  const iosOffset  = isIOS ? -8 : 0;
 
   sorted.forEach((s, idx) => {
     const rec   = manager.getRecord(s.id);
@@ -317,18 +316,18 @@ function buildCanvas(manager) {
     ctx.fillStyle    = '#64748b';
     ctx.font         = `bold 11px Prompt, Sarabun, sans-serif`;
     ctx.textBaseline = 'middle';
-    fillTextCenter(ctx, `เลขที่ ${s.id}`, midX, cy + 104 + iosOffset);
+    fillTextCenter(ctx, `เลขที่ ${s.id}`, midX, cy + 104);
 
     // สถานะ
     ctx.fillStyle = color;
     ctx.font      = `bold 11px Prompt, Sarabun, sans-serif`;
-    fillTextCenter(ctx, label, midX, cy + 116 + iosOffset);
+    fillTextCenter(ctx, label, midX, cy + 116);
 
     // หมายเหตุ
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
       ctx.font      = `10px Prompt, Sarabun, sans-serif`;
-      fillTextCenter(ctx, clip(ctx, rec.reason, CELL_W - 16), midX, cy + 128 + iosOffset);
+      fillTextCenter(ctx, clip(ctx, rec.reason, CELL_W - 16), midX, cy + 128);
     }
 
     ctx.textBaseline = 'alphabetic';
