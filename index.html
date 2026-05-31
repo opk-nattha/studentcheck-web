@@ -1,99 +1,915 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Check</title>
-    
-    <link rel="icon" type="svg+xml" href="Asset/icon/logo.svg">
-    <link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
-    <link rel="shortcut icon" href="Asset/icon/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="Asset/icon/apple-touch-icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Student Check">
-    <link rel="manifest" href="site.webmanifest">
-    <meta name="theme-color" content="#ffffff">
-    
-    <link rel="preconnect" href="https://fonts.google.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&display=swap');
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Student Check</title>
 
-        body {
-            font-family: 'Chakra Petch', sans-serif;
-            background-color: #ffffff; /* พื้นหลังสีขาวล้วน */
-            height: 100dvh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; 
-            position: relative;
-        }
+<link rel="icon" type="svg+xml" href="Asset/icon/logo.svg">
+<link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
+<link rel="shortcut icon" href="Asset/icon/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="Asset/icon/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Student Check">
+<meta name="theme-color" content="#ffffff">
 
-        /* ==========================================
-           หน้าจอ Boot (Splash Screen)
-           ========================================== */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #f0f4f8; /* สีพื้นหลังของหน้าโหลด */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            animation: hideSplash 3.5s ease-in-out forwards;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-        .splash-logo {
-            width: 512px;
-            opacity: 0;
-            animation: fadeInOut 3s ease-in-out forwards;
-        }
+<style>
+/* =====================================================
+   RESET & TOKENS
+   ===================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ==========================================
-           คิวแอนิเมชัน
-           ========================================== */
-        @keyframes fadeInOut {
-            0%   { opacity: 0; transform: scale(0.9); }
-            20%  { opacity: 1; transform: scale(1); }
-            80%  { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(1.1); }
-        }
+:root {
+  --brand:        #7ee0d6;
+  --brand-dark:   #4fc5b9;
+  --brand-bg:     #edfaf8;
+  --ink:          #231f1f;
+  --ink-2:        #4a4646;
+  --ink-3:        #8a8585;
+  --surface:      #ffffff;
+  --surface-2:    #f7f8f9;
+  --surface-3:    #eff1f3;
+  --border:       rgba(35,31,31,0.08);
+  --border-2:     rgba(35,31,31,0.14);
+  --ma:           #00BF63;
+  --ma-bg:        #e6f9f0;
+  --la:           #E84040;
+  --la-bg:        #fdeaea;
+  --khat:         #F5A300;
+  --khat-bg:      #fff5e0;
+  --pending-bg:   #f2f3f5;
+  --font-en:      'Chakra Petch', sans-serif;
+  --font-th:      'Prompt', sans-serif;
+  --r:            12px;
+  --r-sm:         8px;
+  --shadow:       0 1px 4px rgba(35,31,31,0.08), 0 4px 16px rgba(35,31,31,0.05);
+  --shadow-sm:    0 1px 3px rgba(35,31,31,0.07);
+}
 
-        @keyframes hideSplash {
-            0%   { opacity: 1; visibility: visible; }
-            85%  { opacity: 1; visibility: visible; }
-            100% { opacity: 0; visibility: hidden; }
-        }
+html { height: 100%; }
 
-        /* ==========================================
-           iPhone SE2 / Mobile Responsive
-           ========================================== */
-        @media screen and (max-width: 750px) {
-            .splash-logo {
-                width: 256px;
-                opacity: 0;
-                animation: fadeInOut 3s ease-in-out forwards;
-            }
-        }
-    </style>
+body {
+  font-family: var(--font-th);
+  background: var(--surface-2);
+  color: var(--ink);
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =====================================================
+   SPLASH SCREEN
+   ===================================================== */
+#splash {
+  position: fixed; inset: 0;
+  background: #f0f4f8;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  animation: splashHide 3.6s ease forwards;
+}
+
+#splash img {
+  width: min(512px, 80vw);
+  opacity: 0;
+  animation: splashFade 3s ease forwards;
+}
+
+@keyframes splashFade {
+  0%   { opacity: 0; transform: scale(.92); }
+  20%  { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+@keyframes splashHide {
+  0%, 84% { opacity: 1; visibility: visible; pointer-events: all; }
+  100%    { opacity: 0; visibility: hidden;  pointer-events: none; }
+}
+
+/* =====================================================
+   APP SHELL
+   ===================================================== */
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: 100dvh;
+  max-height: 100dvh;
+  contain: strict;
+}
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+#header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  contain: layout style;
+}
+
+.h-left { display: flex; align-items: center; gap: 12px; }
+
+.logo-wrap {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--brand-bg);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-wrap img { width: 28px; height: 28px; object-fit: contain; }
+
+.h-title {
+  font-family: var(--font-en);
+  font-size: 15px; font-weight: 700;
+  color: var(--ink);
+  letter-spacing: .3px;
+  line-height: 1;
+}
+.h-sub {
+  font-family: var(--font-th);
+  font-size: 11px; font-weight: 300;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.h-clock { text-align: right; }
+.clock-day { font-size: 11px; color: var(--ink-3); line-height: 1; }
+.clock-time {
+  font-family: var(--font-en);
+  font-size: 16px; font-weight: 600;
+  color: var(--ink);
+  letter-spacing: .5px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* =====================================================
+   SUMMARY BAR
+   ===================================================== */
+#summary {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 10px 20px;
+  gap: 10px;
+  flex-shrink: 0;
+  contain: layout style;
+}
+
+.stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  contain: layout style;
+}
+
+.stat-pip {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-body { min-width: 0; }
+.stat-lbl { font-size: 11px; color: var(--ink-3); line-height: 1; }
+.stat-val {
+  font-family: var(--font-en);
+  font-size: 22px; font-weight: 700;
+  line-height: 1; margin-top: 2px;
+  contain: layout style;
+}
+
+/* =====================================================
+   MAIN CONTENT AREA
+   ===================================================== */
+#content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  #content { grid-template-columns: 1fr; }
+  #sidebar  { display: none; }
+}
+
+/* =====================================================
+   STUDENT PANEL
+   ===================================================== */
+#student-panel {
+  overflow-y: auto;
+  padding: 14px 16px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-2) transparent;
+  contain: strict;
+}
+#student-panel::-webkit-scrollbar { width: 4px; }
+#student-panel::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+
+.panel-lbl {
+  font-family: var(--font-en);
+  font-size: 10px; letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+#student-list { display: grid; gap: 7px; }
+
+/* =====================================================
+   STUDENT CARD
+   ===================================================== */
+.sc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-2);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 11px;
+  row-gap: 0;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  contain: layout style;
+  will-change: border-color;
+  transition: border-left-color .15s;
+}
+
+.sc[data-status="ma"]   { border-left-color: var(--ma); }
+.sc[data-status="la"]   { border-left-color: var(--la); }
+.sc[data-status="khat"] { border-left-color: var(--khat); }
+
+/* Avatar */
+.sc-av {
+  grid-row: 1;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--pending-bg);
+  border: 2px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-en);
+  font-size: 13px; font-weight: 700;
+  color: var(--ink-3);
+  position: relative;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s, color .15s;
+  contain: layout style;
+}
+
+.sc[data-status="ma"]   .sc-av { background: var(--ma-bg);   border-color: var(--ma);   color: var(--ma);   }
+.sc[data-status="la"]   .sc-av { background: var(--la-bg);   border-color: var(--la);   color: var(--la);   }
+.sc[data-status="khat"] .sc-av { background: var(--khat-bg); border-color: var(--khat); color: var(--khat); }
+
+.sc-rank {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--ma);
+  color: #fff;
+  font-size: 8px; font-weight: 700;
+  font-family: var(--font-en);
+  border-radius: 50%;
+  width: 15px; height: 15px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid #fff;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.sc-rank.show { opacity: 1; }
+
+/* Info */
+.sc-info { grid-row: 1; min-width: 0; }
+.sc-num  { font-size: 10px; color: var(--ink-3); line-height: 1; }
+.sc-name {
+  font-size: 14px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.sc-rsn {
+  font-size: 11px; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+  min-height: 14px;
+}
+
+/* Buttons */
+.sc-btns {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 4px 11px;
+  border-radius: 6px;
+  border: 1.5px solid;
+  font-family: var(--font-th);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  transition: background .12s, color .12s, transform .08s;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.96); }
+
+.btn-ma   { border-color: var(--ma);   color: var(--ma); }
+.btn-la   { border-color: var(--la);   color: var(--la); }
+.btn-khat { border-color: var(--khat); color: var(--khat); }
+
+.btn-ma.on   { background: var(--ma);   color: #fff; }
+.btn-la.on   { background: var(--la);   color: #fff; }
+.btn-khat.on { background: var(--khat); color: #fff; }
+
+/* Reason row */
+.sc-reason-row {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .2s ease, margin-top .2s ease;
+}
+.sc-reason-row.open {
+  max-height: 40px;
+  margin-top: 7px;
+}
+
+.reason-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  font-family: var(--font-th);
+  font-size: 12px;
+  color: var(--ink);
+  padding: 5px 9px;
+  outline: none;
+  transition: border-color .12s;
+}
+.reason-input:focus { border-color: var(--brand-dark); }
+.reason-input::placeholder { color: var(--ink-3); }
+
+/* =====================================================
+   SIDEBAR
+   ===================================================== */
+#sidebar {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.sb-section {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sb-heading {
+  font-family: var(--font-en);
+  font-size: 10px; letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+
+/* Top 6 */
+.rank-item {
+  display: flex; align-items: center;
+  gap: 9px; padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rank-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.rank-n {
+  font-family: var(--font-en);
+  font-size: 13px; font-weight: 700;
+  width: 22px; text-align: center;
+  flex-shrink: 0;
+}
+
+.rank-av {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--ma-bg);
+  border: 1.5px solid var(--ma);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-en);
+  font-size: 10px; font-weight: 700;
+  color: var(--ma);
+  flex-shrink: 0;
+}
+
+.rank-name {
+  font-size: 13px; font-weight: 500;
+  flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.rank-empty {
+  font-size: 12px; color: var(--ink-3);
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* Grid 40 */
+.sb-grid-wrap { padding: 12px 14px 14px; }
+
+.grid-40 {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+}
+
+.slot {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--pending-bg);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-en);
+  font-size: 10px; font-weight: 600;
+  color: var(--ink-3);
+  position: relative;
+  contain: layout style paint;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.slot[data-s="ma"]   { background: var(--ma-bg);   border-color: var(--ma);   color: var(--ma); }
+.slot[data-s="la"]   { background: var(--la-bg);   border-color: var(--la);   color: var(--la); }
+.slot[data-s="khat"] { background: var(--khat-bg); border-color: var(--khat); color: var(--khat); }
+
+.slot-lbl { font-size: 8px; pointer-events: none; }
+
+/* =====================================================
+   RESPONSIVE TWEAKS
+   ===================================================== */
+@media (max-width: 480px) {
+  #summary { grid-template-columns: repeat(2, 1fr); }
+  .btn { font-size: 11px; padding: 3px 8px; }
+}
+
+/* =====================================================
+   SCROLLBAR GLOBAL
+   ===================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35,31,31,.12) transparent;
+}
+</style>
 </head>
 <body>
-    <div id="splash-screen">
-        <img src="Asset/icon/intro-logo.svg" alt="Intro Logo" class="splash-logo">
+
+<!-- SPLASH (preserved from original) -->
+<div id="splash">
+  <img src="Asset/icon/intro-logo.svg" alt="Student Check">
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="h-left">
+      <div class="logo-wrap">
+        <img src="Asset/icon/logo.svg" alt="logo">
+      </div>
+      <div>
+        <div class="h-title">Student Check</div>
+        <div class="h-sub">ระบบเช็คการเข้าเรียน</div>
+      </div>
     </div>
-    
-    </body>
+    <div class="h-clock">
+      <div class="clock-day" id="clk-day"></div>
+      <div class="clock-time" id="clk-time"></div>
+    </div>
+  </header>
+
+  <!-- SUMMARY BAR -->
+  <div id="summary">
+    <div class="stat">
+      <div class="stat-pip" style="background:var(--ma)"></div>
+      <div class="stat-body">
+        <div class="stat-lbl">มา</div>
+        <div class="stat-val" id="c-ma" style="color:var(--ma)">0</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-pip" style="background:var(--la)"></div>
+      <div class="stat-body">
+        <div class="stat-lbl">ลา</div>
+        <div class="stat-val" id="c-la" style="color:var(--la)">0</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-pip" style="background:var(--khat)"></div>
+      <div class="stat-body">
+        <div class="stat-lbl">ขาด</div>
+        <div class="stat-val" id="c-khat" style="color:var(--khat)">0</div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-pip" style="background:var(--ink-3)"></div>
+      <div class="stat-body">
+        <div class="stat-lbl">ยังไม่เช็ค</div>
+        <div class="stat-val" id="c-pnd" style="color:var(--ink-3)">40</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- LEFT: student list -->
+    <div id="student-panel">
+      <div class="panel-lbl">รายชื่อนักเรียน — 40 คน</div>
+      <div id="student-list"></div>
+    </div>
+
+    <!-- RIGHT: sidebar -->
+    <div id="sidebar">
+      <div class="sb-section">
+        <div class="sb-heading">🏆 Top 6 — มาก่อน</div>
+        <div id="top6"></div>
+      </div>
+      <div class="sb-grid-wrap">
+        <div class="sb-heading" style="margin-bottom:10px">Grid สถานะ 40 คน</div>
+        <div class="grid-40" id="grid40"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+/* ==============================================
+   CONFIG — แก้ชื่อนักเรียนที่นี่
+   ============================================== */
+const NAMES = [
+  'นักเรียน 01','นักเรียน 02','นักเรียน 03','นักเรียน 04','นักเรียน 05',
+  'นักเรียน 06','นักเรียน 07','นักเรียน 08','นักเรียน 09','นักเรียน 10',
+  'นักเรียน 11','นักเรียน 12','นักเรียน 13','นักเรียน 14','นักเรียน 15',
+  'นักเรียน 16','นักเรียน 17','นักเรียน 18','นักเรียน 19','นักเรียน 20',
+  'นักเรียน 21','นักเรียน 22','นักเรียน 23','นักเรียน 24','นักเรียน 25',
+  'นักเรียน 26','นักเรียน 27','นักเรียน 28','นักเรียน 29','นักเรียน 30',
+  'นักเรียน 31','นักเรียน 32','นักเรียน 33','นักเรียน 34','นักเรียน 35',
+  'นักเรียน 36','นักเรียน 37','นักเรียน 38','นักเรียน 39','นักเรียน 40',
+];
+
+const FUNNY = [
+  '{n} MVP 🥇', '{n} มาก่อนใคร!', '{n} ขยันมาก 👍',
+  '{n} ตรงเวลา', '{n} ไม่รอใคร', '{n} เช้าจริงๆ',
+];
+
+const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const STORAGE_KEY = 'sc_data_v1';
+
+/* ==============================================
+   STATE
+   ============================================== */
+// status: null | 'ma' | 'la' | 'khat'
+// time: timestamp (ms) | null
+// reason: string
+let state = NAMES.map((name, i) => ({
+  id: i + 1,
+  name,
+  status: null,
+  time: null,
+  reason: '',
+}));
+
+/* Load from localStorage */
+(function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed) && parsed.length === 40) {
+      parsed.forEach((s, i) => {
+        if (s.status) { state[i].status = s.status; state[i].time = s.time || null; }
+        if (s.reason) state[i].reason = s.reason;
+      });
+    }
+  } catch(_) {}
+})();
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(
+      state.map(s => ({ status: s.status, time: s.time, reason: s.reason }))
+    ));
+  } catch(_) {}
+}
+
+/* ==============================================
+   HELPERS
+   ============================================== */
+function initials(name) {
+  const p = name.trim().split(' ');
+  return p.length >= 2 ? p[0][0] + p[1][0] : name.substring(0, 2);
+}
+
+function getTop6() {
+  return state.filter(s => s.status === 'ma' && s.time)
+    .sort((a, b) => a.time - b.time)
+    .slice(0, 6);
+}
+
+function getRankMap() {
+  const map = {};
+  getTop6().forEach((s, i) => { map[s.id] = i + 1; });
+  return map;
+}
+
+/* ==============================================
+   CLOCK (rAF — no setInterval overhead)
+   ============================================== */
+const elDay  = document.getElementById('clk-day');
+const elTime = document.getElementById('clk-time');
+let lastMinute = -1;
+
+function tickClock(ts) {
+  const now = new Date();
+  const m = now.getMinutes();
+  if (m !== lastMinute) {
+    lastMinute = m;
+    const day = THAI_DAYS[now.getDay()];
+    const d = String(now.getDate()).padStart(2,'0');
+    const mo = String(now.getMonth()+1).padStart(2,'0');
+    const y = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(m).padStart(2,'0');
+    elDay.textContent  = 'วัน' + day;
+    elTime.textContent = `${d}/${mo}/${y}  ${hh}:${mm}`;
+  }
+  requestAnimationFrame(tickClock);
+}
+requestAnimationFrame(tickClock);
+
+/* ==============================================
+   BUILD STUDENT LIST (once on init)
+   ============================================== */
+const listEl   = document.getElementById('student-list');
+const grid40El = document.getElementById('grid40');
+
+// Build all 40 cards at once via DocumentFragment
+const frag = document.createDocumentFragment();
+const gridFrag = document.createDocumentFragment();
+
+state.forEach(s => {
+  /* --- Card --- */
+  const card = document.createElement('div');
+  card.className = 'sc';
+  card.dataset.id = s.id;
+  card.dataset.status = '';
+
+  // Avatar
+  const av = document.createElement('div');
+  av.className = 'sc-av';
+  av.textContent = initials(s.name);
+  const rankEl = document.createElement('div');
+  rankEl.className = 'sc-rank';
+  av.appendChild(rankEl);
+
+  // Info
+  const info = document.createElement('div');
+  info.className = 'sc-info';
+  const num  = document.createElement('div');
+  num.className = 'sc-num';
+  num.textContent = 'เลขที่ ' + String(s.id).padStart(2, '0');
+  const name = document.createElement('div');
+  name.className = 'sc-name';
+  name.textContent = s.name;
+  const rsn  = document.createElement('div');
+  rsn.className = 'sc-rsn';
+  info.append(num, name, rsn);
+
+  // Buttons
+  const btns = document.createElement('div');
+  btns.className = 'sc-btns';
+  ['ma','la','khat'].forEach(type => {
+    const b = document.createElement('button');
+    b.className = `btn btn-${type}`;
+    b.dataset.t = type;
+    b.textContent = type === 'ma' ? 'มา' : type === 'la' ? 'ลา' : 'ขาด';
+    btns.appendChild(b);
+  });
+
+  // Reason row
+  const rr  = document.createElement('div');
+  rr.className = 'sc-reason-row';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'reason-input';
+  inp.dataset.id = s.id;
+  rr.appendChild(inp);
+
+  card.append(av, info, btns, rr);
+  frag.appendChild(card);
+
+  /* --- Grid slot --- */
+  const slot = document.createElement('div');
+  slot.className = 'slot';
+  slot.dataset.id = s.id;
+  slot.dataset.s  = '';
+  slot.title = s.name;
+  const lbl = document.createElement('span');
+  lbl.className = 'slot-lbl';
+  lbl.textContent = String(s.id).padStart(2,'0');
+  slot.appendChild(lbl);
+  gridFrag.appendChild(slot);
+});
+
+listEl.appendChild(frag);
+grid40El.appendChild(gridFrag);
+
+/* Collect DOM refs AFTER insertion (one lookup per element) */
+const cards  = {};  // id -> { card, av, rankEl, rsnEl, btns{ma,la,khat}, rr, inp }
+const slots  = {};  // id -> slot element
+
+listEl.querySelectorAll('.sc').forEach(card => {
+  const id  = +card.dataset.id;
+  const av  = card.querySelector('.sc-av');
+  cards[id] = {
+    card,
+    av,
+    rankEl:   av.querySelector('.sc-rank'),
+    rsnEl:    card.querySelector('.sc-rsn'),
+    btns:     {
+      ma:   card.querySelector('[data-t="ma"]'),
+      la:   card.querySelector('[data-t="la"]'),
+      khat: card.querySelector('[data-t="khat"]'),
+    },
+    rr:   card.querySelector('.sc-reason-row'),
+    inp:  card.querySelector('.reason-input'),
+  };
+});
+
+grid40El.querySelectorAll('.slot').forEach(slot => {
+  slots[+slot.dataset.id] = slot;
+});
+
+/* ==============================================
+   RENDER UPDATES (surgical — no innerHTML rebuild)
+   ============================================== */
+function renderCard(s) {
+  const { card, av, rankEl, rsnEl, btns, rr, inp } = cards[s.id];
+  const st = s.status || '';
+
+  // Status
+  card.dataset.status = st;
+
+  // Buttons active state
+  Object.entries(btns).forEach(([t, b]) => {
+    b.classList.toggle('on', t === st);
+  });
+
+  // Reason row
+  const needReason = st === 'la' || st === 'khat';
+  rr.classList.toggle('open', needReason);
+  if (needReason) {
+    inp.placeholder = st === 'la' ? 'เหตุผลการลา' : 'เหตุผลการขาด';
+    if (inp.value !== s.reason) inp.value = s.reason;
+  }
+  rsnEl.textContent = s.reason || '';
+}
+
+function renderRanks() {
+  const rankMap = getRankMap();
+
+  // Update rank badges on cards
+  state.forEach(s => {
+    const { rankEl } = cards[s.id];
+    const r = rankMap[s.id];
+    if (r) {
+      rankEl.textContent = r;
+      rankEl.classList.add('show');
+    } else {
+      rankEl.textContent = '';
+      rankEl.classList.remove('show');
+    }
+  });
+
+  // Top6 panel
+  const top6 = getTop6();
+  const t6El = document.getElementById('top6');
+  if (top6.length === 0) {
+    t6El.innerHTML = '<div class="rank-empty">ยังไม่มีใครเช็คชื่อ</div>';
+    return;
+  }
+  const MEDALS = ['🥇','🥈','🥉','4','5','6'];
+  // Build via frag for performance
+  const rf = document.createDocumentFragment();
+  top6.forEach((s, i) => {
+    const phrase = i < FUNNY.length ? FUNNY[i].replace('{n}', s.name) : s.name;
+    const div = document.createElement('div');
+    div.className = 'rank-item';
+    div.innerHTML =
+      `<div class="rank-n">${MEDALS[i]}</div>` +
+      `<div class="rank-av">${initials(s.name)}</div>` +
+      `<div class="rank-name">${phrase}</div>`;
+    rf.appendChild(div);
+  });
+  t6El.replaceChildren(rf);
+}
+
+function renderCounts() {
+  let ma = 0, la = 0, khat = 0, pnd = 0;
+  state.forEach(s => {
+    if      (s.status === 'ma')   ma++;
+    else if (s.status === 'la')   la++;
+    else if (s.status === 'khat') khat++;
+    else                          pnd++;
+  });
+  document.getElementById('c-ma').textContent   = ma;
+  document.getElementById('c-la').textContent   = la;
+  document.getElementById('c-khat').textContent = khat;
+  document.getElementById('c-pnd').textContent  = pnd;
+}
+
+function renderSlot(s) {
+  const slot = slots[s.id];
+  const st = s.status || '';
+  slot.dataset.s = st;
+  slot.querySelector('.slot-lbl').textContent =
+    st === 'ma' ? '✓' : st === 'la' ? '—' : st === 'khat' ? '✗' :
+    String(s.id).padStart(2,'0');
+}
+
+/* Initial render */
+state.forEach(s => { renderCard(s); renderSlot(s); });
+renderCounts();
+renderRanks();
+
+/* ==============================================
+   EVENT DELEGATION — single listener on list
+   ============================================== */
+listEl.addEventListener('click', e => {
+  const btn = e.target.closest('.btn');
+  if (!btn) return;
+  const card = btn.closest('.sc');
+  if (!card) return;
+
+  const id = +card.dataset.id;
+  const type = btn.dataset.t;
+  const s = state[id - 1];
+
+  // Toggle off if same
+  if (s.status === type) {
+    s.status = null;
+    s.time   = null;
+  } else {
+    s.status = type;
+    s.time   = Date.now();
+    if (type === 'ma') s.reason = '';
+  }
+
+  renderCard(s);
+  renderSlot(s);
+  renderCounts();
+  renderRanks();
+  saveState();
+});
+
+/* Reason input — delegated */
+listEl.addEventListener('input', e => {
+  const inp = e.target.closest('.reason-input');
+  if (!inp) return;
+  const id = +inp.dataset.id;
+  const s  = state[id - 1];
+  s.reason = inp.value;
+  state[id - 1].reason = inp.value;
+  cards[id].rsnEl.textContent = inp.value;
+  saveState();
+});
+</script>
+</body>
 </html>
