@@ -2,77 +2,54 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Student Check</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Student Check — PKC 505</title>
+
+  <!-- Icons (คงเดิมจาก Web project) -->
   <link rel="icon" type="image/svg+xml" href="Asset/icon/logo.svg">
   <link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
   <link rel="shortcut icon" href="Asset/icon/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="Asset/icon/apple-touch-icon.png">
-  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Student Check">
-  <meta name="theme-color" content="#ffffff">
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  
+  <meta name="theme-color" content="#1a1a2e">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
 
-<div id="splash-screen">
-  <img src="Asset/icon/intro-logo.svg" alt="Student Check" class="splash-logo">
-</div>
-
-<div id="app">
-  <header id="app-header">
-    <img src="Asset/icon/logo.svg" alt="Logo" class="header-logo">
-    <div class="header-datetime">
-      <span class="header-day"  id="hdr-day"></span>
-      <span class="header-date" id="hdr-date"></span>
-    </div>
-    <div class="header-spacer"></div>
-    <div class="count-pills">
-      <div class="count-pill cp-present"><span class="pill-num" id="cnt-present">0</span>มา</div>
-      <div class="count-pill cp-leave"  ><span class="pill-num" id="cnt-leave">0</span>ลา</div>
-      <div class="count-pill cp-absent" ><span class="pill-num" id="cnt-absent">0</span>ขาด</div>
-      <div class="count-pill cp-none"   ><span class="pill-num" id="cnt-unchecked">0</span>ไม่เช็ค</div>
-    </div>
-    <button class="btn-reset" onclick="resetAll()" title="รีเซ็ตทั้งหมด">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-    </button>
-    <button class="btn-capture" onclick="captureAsPNG()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span>บันทึก PNG</span>
-    </button>
-  </header>
-
-  <div id="top3-section">
-    <div class="top3-label">มาก่อน</div>
-    <div class="top3-list" id="top3-list">
-      <div class="top3-item" id="rank-1"><span class="rank-badge">🥇</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
-      <div class="top3-item" id="rank-2"><span class="rank-badge">🥈</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
-      <div class="top3-item" id="rank-3"><span class="rank-badge">🥉</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
-    </div>
+  <!-- ===== Splash Screen (โหลดจาก GitHub ตามเดิม) ===== -->
+  <div id="splash-screen" aria-hidden="true">
+    <img src="Asset/icon/intro-logo.svg" alt="Student Check" class="splash-logo">
   </div>
 
-  <main id="main-content">
-    <div id="student-grid"></div>
-  </main>
-</div>
+  <!-- ===== App ===== -->
+  <div id="app">
 
-<div id="capture-panel">
-    </div>
+    <!-- Header -->
+    <header class="app-header" id="app-header"></header>
 
-<div id="status-toast"></div>
+    <!-- Summary bar: มา / ลา / ขาด / ไม่ได้เช็ค -->
+    <div class="summary-bar" id="summary-bar" role="region" aria-label="สรุปยอด"></div>
 
-<script src="src/data.js"></script>
-<script src="src/app.js"></script>
+    <!-- Top 3 ที่มาก่อน -->
+    <div class="top-ranks" id="top-ranks" role="region" aria-label="อันดับที่มาก่อน"></div>
+
+    <!-- Action buttons -->
+    <div class="action-bar" id="action-bar"></div>
+
+    <!-- Grid นักเรียน 40 คน -->
+    <main class="students-grid" id="students-grid" role="main" aria-label="รายชื่อนักเรียน"></main>
+
+    <!-- Footer -->
+    <footer class="app-footer" id="app-footer"></footer>
+
+  </div>
+
+  <!-- ===== Scripts (ES Modules) ===== -->
+  <script type="module" src="src/app.js"></script>
 
 </body>
 </html>
