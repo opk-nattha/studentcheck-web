@@ -1,915 +1,966 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Student Check</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Student Check</title>
+  <link rel="icon" type="image/svg+xml" href="Asset/icon/logo.svg">
+  <link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
+  <link rel="shortcut icon" href="Asset/icon/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="Asset/icon/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Student Check">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* ─── Reset & Variables ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c-bg: #ffffff;
+      --c-surface: #f8fafc;
+      --c-border: #e2e8f0;
+      --c-text: #1e293b;
+      --c-muted: #64748b;
+      --c-present: #00BF63;
+      --c-absent: #FF4F4F;
+      --c-leave: #FFB000;
+      --c-unchecked: #94A3B8;
+      --c-present-bg: #e8fdf1;
+      --c-absent-bg: #fff0f0;
+      --c-leave-bg: #fff8e6;
+      --c-unchecked-bg: #f1f5f9;
+      --r-card: 14px;
+      --shadow-card: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+      --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.10);
+      --transition: 0.18s ease;
+      --font: 'Prompt', sans-serif;
+    }
 
-<link rel="icon" type="svg+xml" href="Asset/icon/logo.svg">
-<link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
-<link rel="shortcut icon" href="Asset/icon/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="Asset/icon/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Student Check">
-<meta name="theme-color" content="#ffffff">
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--c-bg);
+      font-family: var(--font);
+      color: var(--c-text);
+      -webkit-tap-highlight-color: transparent;
+    }
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    /* ─── Splash Screen ─── */
+    #splash-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #f0f4f8;
+      display: flex; align-items: center; justify-content: center;
+      animation: splashHide 3.5s ease-in-out forwards;
+      pointer-events: none;
+    }
+    .splash-logo {
+      width: 460px; max-width: 70vw;
+      opacity: 0;
+      animation: splashFade 3s ease-in-out forwards;
+    }
+    @keyframes splashFade {
+      0%   { opacity: 0; transform: scale(0.9); }
+      20%  { opacity: 1; transform: scale(1); }
+      80%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.05); }
+    }
+    @keyframes splashHide {
+      0%,85% { opacity: 1; visibility: visible; }
+      100%   { opacity: 0; visibility: hidden; pointer-events: none; }
+    }
 
-<style>
-/* =====================================================
-   RESET & TOKENS
-   ===================================================== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ─── App Layout ─── */
+    #app {
+      display: flex; flex-direction: column;
+      height: 100dvh; height: 100vh;
+      overflow: hidden;
+    }
 
-:root {
-  --brand:        #7ee0d6;
-  --brand-dark:   #4fc5b9;
-  --brand-bg:     #edfaf8;
-  --ink:          #231f1f;
-  --ink-2:        #4a4646;
-  --ink-3:        #8a8585;
-  --surface:      #ffffff;
-  --surface-2:    #f7f8f9;
-  --surface-3:    #eff1f3;
-  --border:       rgba(35,31,31,0.08);
-  --border-2:     rgba(35,31,31,0.14);
-  --ma:           #00BF63;
-  --ma-bg:        #e6f9f0;
-  --la:           #E84040;
-  --la-bg:        #fdeaea;
-  --khat:         #F5A300;
-  --khat-bg:      #fff5e0;
-  --pending-bg:   #f2f3f5;
-  --font-en:      'Chakra Petch', sans-serif;
-  --font-th:      'Prompt', sans-serif;
-  --r:            12px;
-  --r-sm:         8px;
-  --shadow:       0 1px 4px rgba(35,31,31,0.08), 0 4px 16px rgba(35,31,31,0.05);
-  --shadow-sm:    0 1px 3px rgba(35,31,31,0.07);
-}
+    /* ─── Header ─── */
+    #app-header {
+      flex-shrink: 0;
+      background: var(--c-bg);
+      border-bottom: 1px solid var(--c-border);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+    .header-logo {
+      height: 36px; width: auto; flex-shrink: 0;
+    }
+    .header-datetime {
+      display: flex; flex-direction: column;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
+    .header-day  { font-size: 11px; color: var(--c-muted); font-weight: 400; }
+    .header-date { font-size: 13px; font-weight: 600; color: var(--c-text); }
+    .header-spacer { flex: 1; }
+    .count-pills {
+      display: flex; gap: 6px; flex-shrink: 0;
+    }
+    .count-pill {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 4px 9px; border-radius: 20px;
+      font-size: 10px; font-weight: 500; line-height: 1.3;
+      min-width: 40px;
+    }
+    .count-pill .pill-num { font-size: 16px; font-weight: 700; line-height: 1; }
+    .count-pill.cp-present { background: var(--c-present-bg); color: var(--c-present); }
+    .count-pill.cp-leave   { background: var(--c-leave-bg);   color: var(--c-leave); }
+    .count-pill.cp-absent  { background: var(--c-absent-bg);  color: var(--c-absent); }
+    .count-pill.cp-none    { background: var(--c-unchecked-bg); color: var(--c-unchecked); }
+    .btn-capture {
+      flex-shrink: 0;
+      background: var(--c-text);
+      color: white;
+      border: none; cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: background var(--transition), transform var(--transition);
+      white-space: nowrap;
+    }
+    .btn-capture:hover  { background: #334155; }
+    .btn-capture:active { transform: scale(0.96); }
+    .btn-capture svg    { width: 16px; height: 16px; }
+    .btn-reset {
+      flex-shrink: 0;
+      background: transparent; border: 1.5px solid var(--c-border);
+      color: var(--c-muted);
+      cursor: pointer; padding: 7px 10px;
+      border-radius: 10px;
+      font-family: var(--font); font-size: 13px;
+      transition: all var(--transition);
+    }
+    .btn-reset:hover { border-color: var(--c-absent); color: var(--c-absent); }
 
-html { height: 100%; }
+    /* status toast */
+    #status-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1e293b; color: white;
+      padding: 10px 22px; border-radius: 30px;
+      font-size: 14px; font-weight: 500;
+      z-index: 9000; transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0; white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    #status-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-body {
-  font-family: var(--font-th);
-  background: var(--surface-2);
-  color: var(--ink);
-  height: 100%;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+    /* ─── Top 3 Section ─── */
+    #top3-section {
+      flex-shrink: 0;
+      background: var(--c-surface);
+      border-bottom: 1px solid var(--c-border);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .top3-label {
+      font-size: 11px; font-weight: 600; color: var(--c-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .top3-list {
+      display: flex; gap: 8px; flex: 1; overflow: hidden;
+    }
+    .top3-item {
+      display: flex; align-items: center; gap: 6px;
+      background: white; border: 1px solid var(--c-border);
+      padding: 5px 11px; border-radius: 20px;
+      font-size: 13px; font-weight: 500; flex-shrink: 0;
+      transition: all var(--transition);
+      max-width: 200px;
+    }
+    .top3-item.filled { border-color: var(--c-present); background: var(--c-present-bg); }
+    .top3-item .rank-badge { font-size: 16px; line-height: 1; }
+    .top3-item .rank-name  { color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top3-item .rank-tag   { font-size: 10px; font-weight: 700; color: var(--c-present); background: rgba(0,191,99,0.15); padding: 1px 6px; border-radius: 8px; }
+    .top3-empty { color: var(--c-muted); font-size: 12px; }
 
-/* =====================================================
-   SPLASH SCREEN
-   ===================================================== */
-#splash {
-  position: fixed; inset: 0;
-  background: #f0f4f8;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999;
-  animation: splashHide 3.6s ease forwards;
-}
+    /* ─── Main Scrollable Content ─── */
+    #main-content {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
 
-#splash img {
-  width: min(512px, 80vw);
-  opacity: 0;
-  animation: splashFade 3s ease forwards;
-}
+    /* ─── Student Grid ─── */
+    #student-grid {
+      display: grid;
+      gap: 10px;
+    }
 
-@keyframes splashFade {
-  0%   { opacity: 0; transform: scale(.92); }
-  20%  { opacity: 1; transform: scale(1); }
-  80%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.06); }
-}
-@keyframes splashHide {
-  0%, 84% { opacity: 1; visibility: visible; pointer-events: all; }
-  100%    { opacity: 0; visibility: hidden;  pointer-events: none; }
-}
+    /* Responsive columns */
+    @media (max-width: 479px) {
+      #student-grid { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 480px) and (max-width: 767px) {
+      #student-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      #student-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      #student-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (min-width: 1280px) {
+      #student-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    }
 
-/* =====================================================
-   APP SHELL
-   ===================================================== */
-#app {
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  height: 100dvh;
-  max-height: 100dvh;
-  contain: strict;
-}
+    /* ─── Student Card ─── */
+    .student-card {
+      background: white;
+      border-radius: var(--r-card);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: box-shadow var(--transition), transform var(--transition);
+      overflow: hidden;
+      position: relative;
+    }
+    .student-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+    .student-card.s-present { border-left: 3px solid var(--c-present); }
+    .student-card.s-absent  { border-left: 3px solid var(--c-absent); }
+    .student-card.s-leave   { border-left: 3px solid var(--c-leave); }
+    .student-card.s-unchecked { border-left: 3px solid var(--c-border); }
 
-/* =====================================================
-   HEADER
-   ===================================================== */
-#header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
-  contain: layout style;
-}
+    /* Mobile: horizontal layout */
+    @media (max-width: 479px) {
+      .card-inner {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px;
+      }
+      .card-avatar-wrap { width: 52px; height: 52px; flex-shrink: 0; }
+      .card-info { flex: 1; min-width: 0; }
+      .card-num  { font-size: 11px; color: var(--c-muted); font-weight: 500; }
+      .card-name { font-size: 14px; font-weight: 600; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .card-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+      .card-btns { display: flex; gap: 5px; }
+      .card-note-wrap { width: 100%; }
+      .order-badge { top: 8px; left: 8px; }
+    }
 
-.h-left { display: flex; align-items: center; gap: 12px; }
+    /* Tablet+: vertical layout */
+    @media (min-width: 480px) {
+      .card-inner {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 14px 10px 12px;
+        gap: 8px;
+      }
+      .card-avatar-wrap { width: 70px; height: 70px; }
+      .card-info { width: 100%; text-align: center; }
+      .card-num  { font-size: 10px; color: var(--c-muted); font-weight: 500; }
+      .card-name { font-size: 13px; font-weight: 600; color: var(--c-text); 
+                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .card-actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .card-btns { display: flex; gap: 5px; justify-content: center; width: 100%; }
+      .card-note-wrap { width: 100%; }
+      .order-badge { top: 8px; right: 8px; }
+    }
 
-.logo-wrap {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--brand-bg);
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.logo-wrap img { width: 28px; height: 28px; object-fit: contain; }
+    .card-avatar-wrap { position: relative; }
+    .card-avatar-wrap svg { width: 100%; height: 100%; display: block; }
 
-.h-title {
-  font-family: var(--font-en);
-  font-size: 15px; font-weight: 700;
-  color: var(--ink);
-  letter-spacing: .3px;
-  line-height: 1;
-}
-.h-sub {
-  font-family: var(--font-th);
-  font-size: 11px; font-weight: 300;
-  color: var(--ink-3);
-  margin-top: 2px;
-}
+    .order-badge {
+      position: absolute;
+      width: 20px; height: 20px;
+      background: var(--c-present);
+      color: white; font-size: 10px; font-weight: 700;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,191,99,0.4);
+    }
+    .order-badge.hidden { display: none; }
 
-.h-clock { text-align: right; }
-.clock-day { font-size: 11px; color: var(--ink-3); line-height: 1; }
-.clock-time {
-  font-family: var(--font-en);
-  font-size: 16px; font-weight: 600;
-  color: var(--ink);
-  letter-spacing: .5px;
-  line-height: 1;
-  margin-top: 2px;
-}
+    /* Status buttons */
+    .btn-status {
+      flex: 1; max-width: 70px;
+      padding: 5px 0;
+      border: 1.5px solid;
+      border-radius: 8px;
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all var(--transition);
+      background: transparent;
+    }
+    .btn-status.bs-present { border-color: var(--c-present); color: var(--c-present); }
+    .btn-status.bs-leave   { border-color: var(--c-leave);   color: var(--c-leave); }
+    .btn-status.bs-absent  { border-color: var(--c-absent);  color: var(--c-absent); }
+    .btn-status.bs-present.active { background: var(--c-present); color: white; }
+    .btn-status.bs-leave.active   { background: var(--c-leave);   color: white; }
+    .btn-status.bs-absent.active  { background: var(--c-absent);  color: white; }
+    .btn-status:not(.active) { opacity: 0.45; }
+    .btn-status:hover { opacity: 1 !important; }
+    .btn-status:active { transform: scale(0.94); }
 
-/* =====================================================
-   SUMMARY BAR
-   ===================================================== */
-#summary {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  padding: 10px 20px;
-  gap: 10px;
-  flex-shrink: 0;
-  contain: layout style;
-}
+    /* Note input */
+    .card-note {
+      width: 100%; font-family: var(--font); font-size: 11px;
+      border: 1.5px solid var(--c-border); border-radius: 8px;
+      padding: 5px 8px; color: var(--c-text); background: var(--c-surface);
+      outline: none; transition: border var(--transition);
+    }
+    .card-note::placeholder { color: var(--c-unchecked); }
+    .card-note:focus { border-color: var(--c-present); }
+    .card-note-wrap.hidden { display: none; }
 
-.stat {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 9px 12px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  contain: layout style;
-}
+    /* ─── Capture Panel (off-screen, for PNG export) ─── */
+    #capture-panel {
+      position: fixed; left: -9999px; top: 0;
+      width: 1080px;
+      background: #ffffff;
+      font-family: 'Prompt', sans-serif;
+      padding: 0;
+      z-index: -1;
+    }
+    .cp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 28px 40px 20px;
+      border-bottom: 2px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .cp-header-left { display: flex; align-items: center; gap: 16px; }
+    .cp-logo { height: 54px; width: auto; }
+    .cp-title-block { display: flex; flex-direction: column; }
+    .cp-title { font-size: 22px; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .cp-subtitle { font-size: 14px; color: #64748b; font-weight: 400; }
+    .cp-datetime { text-align: right; }
+    .cp-date-big { font-size: 24px; font-weight: 700; color: #1e293b; }
+    .cp-day      { font-size: 14px; color: #64748b; }
 
-.stat-pip {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+    .cp-counts {
+      display: flex; gap: 0;
+      margin: 0 40px;
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid #e2e8f0;
+      margin-top: 20px;
+    }
+    .cp-count-item {
+      flex: 1; padding: 14px 10px; text-align: center;
+      border-right: 1px solid #e2e8f0;
+    }
+    .cp-count-item:last-child { border-right: none; }
+    .cp-count-num { font-size: 32px; font-weight: 700; line-height: 1; }
+    .cp-count-lbl { font-size: 13px; font-weight: 500; margin-top: 2px; }
+    .cp-count-item.ccp { background: #e8fdf1; }
+    .cp-count-item.ccp .cp-count-num { color: #00BF63; }
+    .cp-count-item.ccp .cp-count-lbl { color: #00994f; }
+    .cp-count-item.ccl { background: #fff8e6; }
+    .cp-count-item.ccl .cp-count-num { color: #FFB000; }
+    .cp-count-item.ccl .cp-count-lbl { color: #cc8d00; }
+    .cp-count-item.cca { background: #fff0f0; }
+    .cp-count-item.cca .cp-count-num { color: #FF4F4F; }
+    .cp-count-item.cca .cp-count-lbl { color: #cc3f3f; }
+    .cp-count-item.ccn { background: #f1f5f9; }
+    .cp-count-item.ccn .cp-count-num { color: #64748b; }
+    .cp-count-item.ccn .cp-count-lbl { color: #475569; }
 
-.stat-body { min-width: 0; }
-.stat-lbl { font-size: 11px; color: var(--ink-3); line-height: 1; }
-.stat-val {
-  font-family: var(--font-en);
-  font-size: 22px; font-weight: 700;
-  line-height: 1; margin-top: 2px;
-  contain: layout style;
-}
+    .cp-top3 {
+      display: flex; gap: 12px; margin: 20px 40px 0;
+    }
+    .cp-rank-item {
+      flex: 1; padding: 12px 16px; border-radius: 12px;
+      display: flex; align-items: center; gap: 10px;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+    }
+    .cp-rank-item.rank-filled { background: #e8fdf1; border-color: #00BF63; }
+    .cp-rank-medal { font-size: 26px; line-height: 1; }
+    .cp-rank-name  { font-size: 16px; font-weight: 600; color: #1e293b; }
+    .cp-rank-tag   { font-size: 11px; font-weight: 700; color: #00BF63; }
+    .cp-rank-empty { font-size: 14px; color: #94A3B8; }
 
-/* =====================================================
-   MAIN CONTENT AREA
-   ===================================================== */
-#content {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  min-height: 0;
-  overflow: hidden;
-}
+    .cp-section-title {
+      margin: 20px 40px 12px;
+      font-size: 13px; font-weight: 600; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .cp-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin: 0 40px;
+      padding-bottom: 28px;
+    }
+    .cp-slot {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 8px 4px; border-radius: 10px;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+    }
+    .cp-slot svg { width: 42px; height: 50px; }
+    .cp-slot-num { font-size: 11px; font-weight: 600; color: #1e293b; }
+    .cp-slot-status { font-size: 10px; font-weight: 500; color: #64748b; }
+    .cp-slot-note { font-size: 9px; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
+    .cp-slot.sp { background: #e8fdf1; border-color: #00BF63; }
+    .cp-slot.sl { background: #fff8e6; border-color: #FFB000; }
+    .cp-slot.sa { background: #fff0f0; border-color: #FF4F4F; }
+    .cp-slot.sp .cp-slot-status { color: #00994f; }
+    .cp-slot.sl .cp-slot-status { color: #cc8d00; }
+    .cp-slot.sa .cp-slot-status { color: #cc3f3f; }
 
-@media (max-width: 860px) {
-  #content { grid-template-columns: 1fr; }
-  #sidebar  { display: none; }
-}
-
-/* =====================================================
-   STUDENT PANEL
-   ===================================================== */
-#student-panel {
-  overflow-y: auto;
-  padding: 14px 16px;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-2) transparent;
-  contain: strict;
-}
-#student-panel::-webkit-scrollbar { width: 4px; }
-#student-panel::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
-
-.panel-lbl {
-  font-family: var(--font-en);
-  font-size: 10px; letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 10px;
-  padding-left: 2px;
-}
-
-#student-list { display: grid; gap: 7px; }
-
-/* =====================================================
-   STUDENT CARD
-   ===================================================== */
-.sc {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--border-2);
-  border-radius: var(--r);
-  padding: 10px 12px;
-  display: grid;
-  grid-template-columns: 40px 1fr auto;
-  grid-template-rows: auto auto;
-  column-gap: 11px;
-  row-gap: 0;
-  align-items: center;
-  box-shadow: var(--shadow-sm);
-  contain: layout style;
-  will-change: border-color;
-  transition: border-left-color .15s;
-}
-
-.sc[data-status="ma"]   { border-left-color: var(--ma); }
-.sc[data-status="la"]   { border-left-color: var(--la); }
-.sc[data-status="khat"] { border-left-color: var(--khat); }
-
-/* Avatar */
-.sc-av {
-  grid-row: 1;
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: var(--pending-bg);
-  border: 2px solid var(--border-2);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-en);
-  font-size: 13px; font-weight: 700;
-  color: var(--ink-3);
-  position: relative;
-  flex-shrink: 0;
-  transition: background .15s, border-color .15s, color .15s;
-  contain: layout style;
-}
-
-.sc[data-status="ma"]   .sc-av { background: var(--ma-bg);   border-color: var(--ma);   color: var(--ma);   }
-.sc[data-status="la"]   .sc-av { background: var(--la-bg);   border-color: var(--la);   color: var(--la);   }
-.sc[data-status="khat"] .sc-av { background: var(--khat-bg); border-color: var(--khat); color: var(--khat); }
-
-.sc-rank {
-  position: absolute;
-  top: -4px; right: -4px;
-  background: var(--ma);
-  color: #fff;
-  font-size: 8px; font-weight: 700;
-  font-family: var(--font-en);
-  border-radius: 50%;
-  width: 15px; height: 15px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1.5px solid #fff;
-  opacity: 0;
-  transition: opacity .15s;
-}
-.sc-rank.show { opacity: 1; }
-
-/* Info */
-.sc-info { grid-row: 1; min-width: 0; }
-.sc-num  { font-size: 10px; color: var(--ink-3); line-height: 1; }
-.sc-name {
-  font-size: 14px; font-weight: 500;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.3;
-}
-.sc-rsn {
-  font-size: 11px; color: var(--ink-3);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-top: 1px;
-  min-height: 14px;
-}
-
-/* Buttons */
-.sc-btns {
-  grid-row: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.btn {
-  padding: 4px 11px;
-  border-radius: 6px;
-  border: 1.5px solid;
-  font-family: var(--font-th);
-  font-size: 12px; font-weight: 500;
-  cursor: pointer;
-  background: transparent;
-  transition: background .12s, color .12s, transform .08s;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-.btn:active { transform: scale(.96); }
-
-.btn-ma   { border-color: var(--ma);   color: var(--ma); }
-.btn-la   { border-color: var(--la);   color: var(--la); }
-.btn-khat { border-color: var(--khat); color: var(--khat); }
-
-.btn-ma.on   { background: var(--ma);   color: #fff; }
-.btn-la.on   { background: var(--la);   color: #fff; }
-.btn-khat.on { background: var(--khat); color: #fff; }
-
-/* Reason row */
-.sc-reason-row {
-  grid-column: 2 / 4;
-  grid-row: 2;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height .2s ease, margin-top .2s ease;
-}
-.sc-reason-row.open {
-  max-height: 40px;
-  margin-top: 7px;
-}
-
-.reason-input {
-  width: 100%;
-  background: var(--surface-2);
-  border: 1px solid var(--border-2);
-  border-radius: 6px;
-  font-family: var(--font-th);
-  font-size: 12px;
-  color: var(--ink);
-  padding: 5px 9px;
-  outline: none;
-  transition: border-color .12s;
-}
-.reason-input:focus { border-color: var(--brand-dark); }
-.reason-input::placeholder { color: var(--ink-3); }
-
-/* =====================================================
-   SIDEBAR
-   ===================================================== */
-#sidebar {
-  border-left: 1px solid var(--border);
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-#sidebar::-webkit-scrollbar { width: 4px; }
-#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-.sb-section {
-  padding: 14px 14px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.sb-heading {
-  font-family: var(--font-en);
-  font-size: 10px; letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 10px;
-}
-
-/* Top 6 */
-.rank-item {
-  display: flex; align-items: center;
-  gap: 9px; padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-}
-.rank-item:last-child { border-bottom: none; padding-bottom: 0; }
-
-.rank-n {
-  font-family: var(--font-en);
-  font-size: 13px; font-weight: 700;
-  width: 22px; text-align: center;
-  flex-shrink: 0;
-}
-
-.rank-av {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--ma-bg);
-  border: 1.5px solid var(--ma);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-en);
-  font-size: 10px; font-weight: 700;
-  color: var(--ma);
-  flex-shrink: 0;
-}
-
-.rank-name {
-  font-size: 13px; font-weight: 500;
-  flex: 1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.rank-empty {
-  font-size: 12px; color: var(--ink-3);
-  text-align: center;
-  padding: 16px 0;
-}
-
-/* Grid 40 */
-.sb-grid-wrap { padding: 12px 14px 14px; }
-
-.grid-40 {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 5px;
-}
-
-.slot {
-  aspect-ratio: 1;
-  border-radius: 6px;
-  background: var(--pending-bg);
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-en);
-  font-size: 10px; font-weight: 600;
-  color: var(--ink-3);
-  position: relative;
-  contain: layout style paint;
-  transition: background .15s, border-color .15s, color .15s;
-}
-.slot[data-s="ma"]   { background: var(--ma-bg);   border-color: var(--ma);   color: var(--ma); }
-.slot[data-s="la"]   { background: var(--la-bg);   border-color: var(--la);   color: var(--la); }
-.slot[data-s="khat"] { background: var(--khat-bg); border-color: var(--khat); color: var(--khat); }
-
-.slot-lbl { font-size: 8px; pointer-events: none; }
-
-/* =====================================================
-   RESPONSIVE TWEAKS
-   ===================================================== */
-@media (max-width: 480px) {
-  #summary { grid-template-columns: repeat(2, 1fr); }
-  .btn { font-size: 11px; padding: 3px 8px; }
-}
-
-/* =====================================================
-   SCROLLBAR GLOBAL
-   ===================================================== */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(35,31,31,.12) transparent;
-}
-</style>
+    /* ─── Header responsive ─── */
+    @media (max-width: 600px) {
+      .count-pills .count-pill { padding: 3px 6px; min-width: 34px; }
+      .count-pills .count-pill .pill-num { font-size: 14px; }
+      .count-pills .count-pill { font-size: 9px; }
+      .btn-capture span { display: none; }
+      .header-datetime .header-date { font-size: 11px; }
+    }
+    @media (max-width: 400px) {
+      #app-header { gap: 8px; padding: 8px 10px; }
+      .header-logo { height: 28px; }
+      .btn-reset { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- SPLASH (preserved from original) -->
-<div id="splash">
-  <img src="Asset/icon/intro-logo.svg" alt="Student Check">
+<!-- ═══════════════════════════════════════════
+     SPLASH SCREEN
+═══════════════════════════════════════════ -->
+<div id="splash-screen">
+  <img src="Asset/icon/intro-logo.svg" alt="Student Check" class="splash-logo">
 </div>
 
-<!-- APP SHELL -->
+<!-- ═══════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════ -->
 <div id="app">
 
-  <!-- HEADER -->
-  <header id="header">
-    <div class="h-left">
-      <div class="logo-wrap">
-        <img src="Asset/icon/logo.svg" alt="logo">
-      </div>
-      <div>
-        <div class="h-title">Student Check</div>
-        <div class="h-sub">ระบบเช็คการเข้าเรียน</div>
-      </div>
+  <!-- Header -->
+  <header id="app-header">
+    <img src="Asset/icon/logo.svg" alt="Logo" class="header-logo">
+    <div class="header-datetime">
+      <span class="header-day"  id="hdr-day"></span>
+      <span class="header-date" id="hdr-date"></span>
     </div>
-    <div class="h-clock">
-      <div class="clock-day" id="clk-day"></div>
-      <div class="clock-time" id="clk-time"></div>
+    <div class="header-spacer"></div>
+    <div class="count-pills">
+      <div class="count-pill cp-present"><span class="pill-num" id="cnt-present">0</span>มา</div>
+      <div class="count-pill cp-leave"  ><span class="pill-num" id="cnt-leave">0</span>ลา</div>
+      <div class="count-pill cp-absent" ><span class="pill-num" id="cnt-absent">0</span>ขาด</div>
+      <div class="count-pill cp-none"   ><span class="pill-num" id="cnt-unchecked">40</span>ไม่เช็ค</div>
     </div>
+    <button class="btn-reset" onclick="resetAll()" title="รีเซ็ตทั้งหมด">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
+    <button class="btn-capture" onclick="captureAsPNG()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>บันทึก PNG</span>
+    </button>
   </header>
 
-  <!-- SUMMARY BAR -->
-  <div id="summary">
-    <div class="stat">
-      <div class="stat-pip" style="background:var(--ma)"></div>
-      <div class="stat-body">
-        <div class="stat-lbl">มา</div>
-        <div class="stat-val" id="c-ma" style="color:var(--ma)">0</div>
+  <!-- Top 3 -->
+  <div id="top3-section">
+    <div class="top3-label">มาก่อน</div>
+    <div class="top3-list" id="top3-list">
+      <div class="top3-item" id="rank-1">
+        <span class="rank-badge">🥇</span>
+        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>
       </div>
-    </div>
-    <div class="stat">
-      <div class="stat-pip" style="background:var(--la)"></div>
-      <div class="stat-body">
-        <div class="stat-lbl">ลา</div>
-        <div class="stat-val" id="c-la" style="color:var(--la)">0</div>
+      <div class="top3-item" id="rank-2">
+        <span class="rank-badge">🥈</span>
+        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>
       </div>
-    </div>
-    <div class="stat">
-      <div class="stat-pip" style="background:var(--khat)"></div>
-      <div class="stat-body">
-        <div class="stat-lbl">ขาด</div>
-        <div class="stat-val" id="c-khat" style="color:var(--khat)">0</div>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-pip" style="background:var(--ink-3)"></div>
-      <div class="stat-body">
-        <div class="stat-lbl">ยังไม่เช็ค</div>
-        <div class="stat-val" id="c-pnd" style="color:var(--ink-3)">40</div>
+      <div class="top3-item" id="rank-3">
+        <span class="rank-badge">🥉</span>
+        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>
       </div>
     </div>
   </div>
 
-  <!-- CONTENT -->
-  <div id="content">
+  <!-- Student Grid -->
+  <main id="main-content">
+    <div id="student-grid"></div>
+  </main>
+</div>
 
-    <!-- LEFT: student list -->
-    <div id="student-panel">
-      <div class="panel-lbl">รายชื่อนักเรียน — 40 คน</div>
-      <div id="student-list"></div>
-    </div>
-
-    <!-- RIGHT: sidebar -->
-    <div id="sidebar">
-      <div class="sb-section">
-        <div class="sb-heading">🏆 Top 6 — มาก่อน</div>
-        <div id="top6"></div>
-      </div>
-      <div class="sb-grid-wrap">
-        <div class="sb-heading" style="margin-bottom:10px">Grid สถานะ 40 คน</div>
-        <div class="grid-40" id="grid40"></div>
+<!-- ═══════════════════════════════════════════
+     CAPTURE PANEL (off-screen, for PNG export)
+═══════════════════════════════════════════ -->
+<div id="capture-panel">
+  <div class="cp-header">
+    <div class="cp-header-left">
+      <img src="Asset/icon/logo.svg" class="cp-logo" alt="Logo">
+      <div class="cp-title-block">
+        <div class="cp-title">รายงานการเข้าแถว</div>
+        <div class="cp-subtitle" id="cp-subtitle">ชั้นประถมศึกษา</div>
       </div>
     </div>
+    <div class="cp-datetime">
+      <div class="cp-date-big" id="cp-date"></div>
+      <div class="cp-day"      id="cp-day"></div>
+    </div>
+  </div>
 
-  </div><!-- /content -->
-</div><!-- /app -->
+  <div class="cp-counts">
+    <div class="cp-count-item ccp">
+      <div class="cp-count-num" id="cp-cnt-p">0</div>
+      <div class="cp-count-lbl">มา</div>
+    </div>
+    <div class="cp-count-item ccl">
+      <div class="cp-count-num" id="cp-cnt-l">0</div>
+      <div class="cp-count-lbl">ลา</div>
+    </div>
+    <div class="cp-count-item cca">
+      <div class="cp-count-num" id="cp-cnt-a">0</div>
+      <div class="cp-count-lbl">ขาด</div>
+    </div>
+    <div class="cp-count-item ccn">
+      <div class="cp-count-num" id="cp-cnt-n">0</div>
+      <div class="cp-count-lbl">ไม่เช็ค</div>
+    </div>
+  </div>
+
+  <div class="cp-top3" id="cp-top3"></div>
+  <div class="cp-section-title">รายชื่อนักเรียน (เรียงตามลำดับการมา)</div>
+  <div class="cp-grid" id="cp-grid"></div>
+</div>
+
+<!-- Status Toast -->
+<div id="status-toast"></div>
 
 <script>
-/* ==============================================
-   CONFIG — แก้ชื่อนักเรียนที่นี่
-   ============================================== */
-const NAMES = [
-  'นักเรียน 01','นักเรียน 02','นักเรียน 03','นักเรียน 04','นักเรียน 05',
-  'นักเรียน 06','นักเรียน 07','นักเรียน 08','นักเรียน 09','นักเรียน 10',
-  'นักเรียน 11','นักเรียน 12','นักเรียน 13','นักเรียน 14','นักเรียน 15',
-  'นักเรียน 16','นักเรียน 17','นักเรียน 18','นักเรียน 19','นักเรียน 20',
-  'นักเรียน 21','นักเรียน 22','นักเรียน 23','นักเรียน 24','นักเรียน 25',
-  'นักเรียน 26','นักเรียน 27','นักเรียน 28','นักเรียน 29','นักเรียน 30',
-  'นักเรียน 31','นักเรียน 32','นักเรียน 33','นักเรียน 34','นักเรียน 35',
-  'นักเรียน 36','นักเรียน 37','นักเรียน 38','นักเรียน 39','นักเรียน 40',
+/* ═══════════════════════════════════════════════════════════════
+   ✏️  แก้ไขชื่อนักเรียนได้ที่นี่
+   - name:     เลขที่ / ชื่อย่อที่แสดงบนการ์ด
+   - realName: ชื่อจริง (ใช้ในอันดับ Top 3)
+   หากต้องการเพิ่มนักเรียน ให้เพิ่ม { id, name, realName } ต่อท้าย
+═══════════════════════════════════════════════════════════════ */
+const STUDENTS_DATA = [
+  { id:  1, name:  "1", realName: "เลขที่ 1"  },
+  { id:  2, name:  "2", realName: "เลขที่ 2"  },
+  { id:  3, name:  "3", realName: "เลขที่ 3"  },
+  { id:  4, name:  "4", realName: "เลขที่ 4"  },
+  { id:  5, name:  "5", realName: "เลขที่ 5"  },
+  { id:  6, name:  "6", realName: "เลขที่ 6"  },
+  { id:  7, name:  "7", realName: "เลขที่ 7"  },
+  { id:  8, name:  "8", realName: "เลขที่ 8"  },
+  { id:  9, name:  "9", realName: "เลขที่ 9"  },
+  { id: 10, name: "10", realName: "เลขที่ 10" },
+  { id: 11, name: "11", realName: "เลขที่ 11" },
+  { id: 12, name: "12", realName: "เลขที่ 12" },
+  { id: 13, name: "13", realName: "เลขที่ 13" },
+  { id: 14, name: "14", realName: "เลขที่ 14" },
+  { id: 15, name: "15", realName: "เลขที่ 15" },
+  { id: 16, name: "16", realName: "เลขที่ 16" },
+  { id: 17, name: "17", realName: "เลขที่ 17" },
+  { id: 18, name: "18", realName: "เลขที่ 18" },
+  { id: 19, name: "19", realName: "เลขที่ 19" },
+  { id: 20, name: "20", realName: "เลขที่ 20" },
+  { id: 21, name: "21", realName: "เลขที่ 21" },
+  { id: 22, name: "22", realName: "เลขที่ 22" },
+  { id: 23, name: "23", realName: "เลขที่ 23" },
+  { id: 24, name: "24", realName: "เลขที่ 24" },
+  { id: 25, name: "25", realName: "เลขที่ 25" },
+  { id: 26, name: "26", realName: "เลขที่ 26" },
+  { id: 27, name: "27", realName: "เลขที่ 27" },
+  { id: 28, name: "28", realName: "เลขที่ 28" },
+  { id: 29, name: "29", realName: "เลขที่ 29" },
+  { id: 30, name: "30", realName: "เลขที่ 30" },
+  { id: 31, name: "31", realName: "เลขที่ 31" },
+  { id: 32, name: "32", realName: "เลขที่ 32" },
+  { id: 33, name: "33", realName: "เลขที่ 33" },
+  { id: 34, name: "34", realName: "เลขที่ 34" },
+  { id: 35, name: "35", realName: "เลขที่ 35" },
+  { id: 36, name: "36", realName: "เลขที่ 36" },
+  { id: 37, name: "37", realName: "เลขที่ 37" },
+  { id: 38, name: "38", realName: "เลขที่ 38" },
+  { id: 39, name: "39", realName: "เลขที่ 39" },
+  { id: 40, name: "40", realName: "เลขที่ 40" },
 ];
 
-const FUNNY = [
-  '{n} MVP 🥇', '{n} มาก่อนใคร!', '{n} ขยันมาก 👍',
-  '{n} ตรงเวลา', '{n} ไม่รอใคร', '{n} เช้าจริงๆ',
-];
-
+/* ─── Constants ─── */
+const STATUS = { PRESENT: 'present', LEAVE: 'leave', ABSENT: 'absent', UNCHECKED: 'unchecked' };
+const STATUS_COLORS = {
+  [STATUS.PRESENT]:   '#00BF63',
+  [STATUS.LEAVE]:     '#FFB000',
+  [STATUS.ABSENT]:    '#FF4F4F',
+  [STATUS.UNCHECKED]: '#94A3B8',
+};
+const STATUS_LABELS = {
+  [STATUS.PRESENT]:   'มา',
+  [STATUS.LEAVE]:     'ลา',
+  [STATUS.ABSENT]:    'ขาด',
+  [STATUS.UNCHECKED]: 'ไม่เช็ค',
+};
 const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-const STORAGE_KEY = 'sc_data_v1';
 
-/* ==============================================
-   STATE
-   ============================================== */
-// status: null | 'ma' | 'la' | 'khat'
-// time: timestamp (ms) | null
-// reason: string
-let state = NAMES.map((name, i) => ({
-  id: i + 1,
-  name,
-  status: null,
-  time: null,
-  reason: '',
-}));
+/* ─── App State ─── */
+const state = {
+  students: STUDENTS_DATA.map(s => ({
+    ...s,
+    status: STATUS.UNCHECKED,
+    note: '',
+    checkTime: null,
+  }))
+};
 
-/* Load from localStorage */
-(function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    const parsed = JSON.parse(saved);
-    if (Array.isArray(parsed) && parsed.length === 40) {
-      parsed.forEach((s, i) => {
-        if (s.status) { state[i].status = s.status; state[i].time = s.time || null; }
-        if (s.reason) state[i].reason = s.reason;
-      });
-    }
-  } catch(_) {}
-})();
-
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(
-      state.map(s => ({ status: s.status, time: s.time, reason: s.reason }))
-    ));
-  } catch(_) {}
+/* ─── SVG Student Icon ─── */
+function studentSVG(color) {
+  const c = color;
+  // Slightly darker for hair
+  const dark = shadeColor(color, -30);
+  return `<svg viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="14" r="12" fill="${c}"/>
+    <path d="M8 12 Q8 2 20 2 Q32 2 32 12" fill="${dark}"/>
+    <circle cx="15.5" cy="13" r="2.2" fill="rgba(255,255,255,0.92)"/>
+    <circle cx="24.5" cy="13" r="2.2" fill="rgba(255,255,255,0.92)"/>
+    <path d="M14.5 18.5 Q20 22 25.5 18.5" stroke="rgba(255,255,255,0.88)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M5 34 C5 27 12 25 20 25 C28 25 35 27 35 34 L36 51 Q36 52 34 52 L6 52 Q4 52 4 51 Z" fill="${c}"/>
+    <path d="M17 25 L20 29.5 L23 25" fill="rgba(255,255,255,0.28)"/>
+  </svg>`;
 }
 
-/* ==============================================
-   HELPERS
-   ============================================== */
-function initials(name) {
-  const p = name.trim().split(' ');
-  return p.length >= 2 ? p[0][0] + p[1][0] : name.substring(0, 2);
+function shadeColor(hex, pct) {
+  const num = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, Math.min(255, (num >> 16) + pct));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + pct));
+  const b = Math.max(0, Math.min(255, (num & 0x0000ff) + pct));
+  return '#' + ((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
 }
 
-function getTop6() {
-  return state.filter(s => s.status === 'ma' && s.time)
-    .sort((a, b) => a.time - b.time)
-    .slice(0, 6);
+/* ─── Date/Time Helpers ─── */
+function getNow() { return new Date(); }
+function formatDate(d) {
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+function formatTime(d) {
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} น.`;
 }
 
-function getRankMap() {
-  const map = {};
-  getTop6().forEach((s, i) => { map[s.id] = i + 1; });
-  return map;
+/* ─── Render Student Card ─── */
+function renderCard(student) {
+  const color = STATUS_COLORS[student.status];
+  const statusClass = {
+    [STATUS.PRESENT]:   's-present',
+    [STATUS.LEAVE]:     's-leave',
+    [STATUS.ABSENT]:    's-absent',
+    [STATUS.UNCHECKED]: 's-unchecked',
+  }[student.status];
+
+  const presentStudents = getPresentSorted();
+  const orderIndex = presentStudents.findIndex(s => s.id === student.id);
+  const orderNum = orderIndex >= 0 ? orderIndex + 1 : null;
+
+  const noteHidden = student.status === STATUS.UNCHECKED ? 'hidden' : '';
+  const noteVal = student.note ? `value="${student.note.replace(/"/g,'&quot;')}"` : '';
+
+  return `
+    <div class="student-card ${statusClass}" id="card-${student.id}" data-id="${student.id}">
+      <div class="card-inner">
+        <div class="card-avatar-wrap">
+          ${studentSVG(color)}
+          <div class="order-badge ${orderNum ? '' : 'hidden'}" id="badge-${student.id}">${orderNum || ''}</div>
+        </div>
+        <div class="card-info">
+          <div class="card-num">เลขที่ ${student.name}</div>
+          <div class="card-name">${student.realName}</div>
+        </div>
+        <div class="card-actions">
+          <div class="card-btns">
+            <button class="btn-status bs-present ${student.status===STATUS.PRESENT?'active':''}"
+              onclick="setStatus(${student.id},'${STATUS.PRESENT}')">มา</button>
+            <button class="btn-status bs-leave ${student.status===STATUS.LEAVE?'active':''}"
+              onclick="setStatus(${student.id},'${STATUS.LEAVE}')">ลา</button>
+            <button class="btn-status bs-absent ${student.status===STATUS.ABSENT?'active':''}"
+              onclick="setStatus(${student.id},'${STATUS.ABSENT}')">ขาด</button>
+          </div>
+          <div class="card-note-wrap ${noteHidden}">
+            <input class="card-note" id="note-${student.id}" type="text" maxlength="40"
+              placeholder="หมายเหตุ (ไม่บังคับ)" ${noteVal}
+              onchange="setNote(${student.id}, this.value)"
+              oninput="setNote(${student.id}, this.value)">
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
 
-/* ==============================================
-   CLOCK (rAF — no setInterval overhead)
-   ============================================== */
-const elDay  = document.getElementById('clk-day');
-const elTime = document.getElementById('clk-time');
-let lastMinute = -1;
-
-function tickClock(ts) {
-  const now = new Date();
-  const m = now.getMinutes();
-  if (m !== lastMinute) {
-    lastMinute = m;
-    const day = THAI_DAYS[now.getDay()];
-    const d = String(now.getDate()).padStart(2,'0');
-    const mo = String(now.getMonth()+1).padStart(2,'0');
-    const y = now.getFullYear();
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(m).padStart(2,'0');
-    elDay.textContent  = 'วัน' + day;
-    elTime.textContent = `${d}/${mo}/${y}  ${hh}:${mm}`;
-  }
-  requestAnimationFrame(tickClock);
-}
-requestAnimationFrame(tickClock);
-
-/* ==============================================
-   BUILD STUDENT LIST (once on init)
-   ============================================== */
-const listEl   = document.getElementById('student-list');
-const grid40El = document.getElementById('grid40');
-
-// Build all 40 cards at once via DocumentFragment
-const frag = document.createDocumentFragment();
-const gridFrag = document.createDocumentFragment();
-
-state.forEach(s => {
-  /* --- Card --- */
-  const card = document.createElement('div');
-  card.className = 'sc';
-  card.dataset.id = s.id;
-  card.dataset.status = '';
-
-  // Avatar
-  const av = document.createElement('div');
-  av.className = 'sc-av';
-  av.textContent = initials(s.name);
-  const rankEl = document.createElement('div');
-  rankEl.className = 'sc-rank';
-  av.appendChild(rankEl);
-
-  // Info
-  const info = document.createElement('div');
-  info.className = 'sc-info';
-  const num  = document.createElement('div');
-  num.className = 'sc-num';
-  num.textContent = 'เลขที่ ' + String(s.id).padStart(2, '0');
-  const name = document.createElement('div');
-  name.className = 'sc-name';
-  name.textContent = s.name;
-  const rsn  = document.createElement('div');
-  rsn.className = 'sc-rsn';
-  info.append(num, name, rsn);
-
-  // Buttons
-  const btns = document.createElement('div');
-  btns.className = 'sc-btns';
-  ['ma','la','khat'].forEach(type => {
-    const b = document.createElement('button');
-    b.className = `btn btn-${type}`;
-    b.dataset.t = type;
-    b.textContent = type === 'ma' ? 'มา' : type === 'la' ? 'ลา' : 'ขาด';
-    btns.appendChild(b);
-  });
-
-  // Reason row
-  const rr  = document.createElement('div');
-  rr.className = 'sc-reason-row';
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.className = 'reason-input';
-  inp.dataset.id = s.id;
-  rr.appendChild(inp);
-
-  card.append(av, info, btns, rr);
-  frag.appendChild(card);
-
-  /* --- Grid slot --- */
-  const slot = document.createElement('div');
-  slot.className = 'slot';
-  slot.dataset.id = s.id;
-  slot.dataset.s  = '';
-  slot.title = s.name;
-  const lbl = document.createElement('span');
-  lbl.className = 'slot-lbl';
-  lbl.textContent = String(s.id).padStart(2,'0');
-  slot.appendChild(lbl);
-  gridFrag.appendChild(slot);
-});
-
-listEl.appendChild(frag);
-grid40El.appendChild(gridFrag);
-
-/* Collect DOM refs AFTER insertion (one lookup per element) */
-const cards  = {};  // id -> { card, av, rankEl, rsnEl, btns{ma,la,khat}, rr, inp }
-const slots  = {};  // id -> slot element
-
-listEl.querySelectorAll('.sc').forEach(card => {
-  const id  = +card.dataset.id;
-  const av  = card.querySelector('.sc-av');
-  cards[id] = {
-    card,
-    av,
-    rankEl:   av.querySelector('.sc-rank'),
-    rsnEl:    card.querySelector('.sc-rsn'),
-    btns:     {
-      ma:   card.querySelector('[data-t="ma"]'),
-      la:   card.querySelector('[data-t="la"]'),
-      khat: card.querySelector('[data-t="khat"]'),
-    },
-    rr:   card.querySelector('.sc-reason-row'),
-    inp:  card.querySelector('.reason-input'),
-  };
-});
-
-grid40El.querySelectorAll('.slot').forEach(slot => {
-  slots[+slot.dataset.id] = slot;
-});
-
-/* ==============================================
-   RENDER UPDATES (surgical — no innerHTML rebuild)
-   ============================================== */
-function renderCard(s) {
-  const { card, av, rankEl, rsnEl, btns, rr, inp } = cards[s.id];
-  const st = s.status || '';
-
-  // Status
-  card.dataset.status = st;
-
-  // Buttons active state
-  Object.entries(btns).forEach(([t, b]) => {
-    b.classList.toggle('on', t === st);
-  });
-
-  // Reason row
-  const needReason = st === 'la' || st === 'khat';
-  rr.classList.toggle('open', needReason);
-  if (needReason) {
-    inp.placeholder = st === 'la' ? 'เหตุผลการลา' : 'เหตุผลการขาด';
-    if (inp.value !== s.reason) inp.value = s.reason;
-  }
-  rsnEl.textContent = s.reason || '';
+/* ─── Get Present Students Sorted by Check Time (earliest first) ─── */
+function getPresentSorted() {
+  return state.students
+    .filter(s => s.status === STATUS.PRESENT)
+    .sort((a, b) => a.checkTime - b.checkTime);
 }
 
-function renderRanks() {
-  const rankMap = getRankMap();
-
-  // Update rank badges on cards
-  state.forEach(s => {
-    const { rankEl } = cards[s.id];
-    const r = rankMap[s.id];
-    if (r) {
-      rankEl.textContent = r;
-      rankEl.classList.add('show');
-    } else {
-      rankEl.textContent = '';
-      rankEl.classList.remove('show');
-    }
-  });
-
-  // Top6 panel
-  const top6 = getTop6();
-  const t6El = document.getElementById('top6');
-  if (top6.length === 0) {
-    t6El.innerHTML = '<div class="rank-empty">ยังไม่มีใครเช็คชื่อ</div>';
-    return;
-  }
-  const MEDALS = ['🥇','🥈','🥉','4','5','6'];
-  // Build via frag for performance
-  const rf = document.createDocumentFragment();
-  top6.forEach((s, i) => {
-    const phrase = i < FUNNY.length ? FUNNY[i].replace('{n}', s.name) : s.name;
-    const div = document.createElement('div');
-    div.className = 'rank-item';
-    div.innerHTML =
-      `<div class="rank-n">${MEDALS[i]}</div>` +
-      `<div class="rank-av">${initials(s.name)}</div>` +
-      `<div class="rank-name">${phrase}</div>`;
-    rf.appendChild(div);
-  });
-  t6El.replaceChildren(rf);
+/* ─── Initial Render ─── */
+function renderGrid() {
+  const grid = document.getElementById('student-grid');
+  grid.innerHTML = state.students.map(s => renderCard(s)).join('');
 }
 
-function renderCounts() {
-  let ma = 0, la = 0, khat = 0, pnd = 0;
-  state.forEach(s => {
-    if      (s.status === 'ma')   ma++;
-    else if (s.status === 'la')   la++;
-    else if (s.status === 'khat') khat++;
-    else                          pnd++;
-  });
-  document.getElementById('c-ma').textContent   = ma;
-  document.getElementById('c-la').textContent   = la;
-  document.getElementById('c-khat').textContent = khat;
-  document.getElementById('c-pnd').textContent  = pnd;
-}
+/* ─── Set Status (ported from ButtonCheck.cs SetStatus) ─── */
+function setStatus(id, newStatus) {
+  const student = state.students.find(s => s.id === id);
+  if (!student) return;
 
-function renderSlot(s) {
-  const slot = slots[s.id];
-  const st = s.status || '';
-  slot.dataset.s = st;
-  slot.querySelector('.slot-lbl').textContent =
-    st === 'ma' ? '✓' : st === 'la' ? '—' : st === 'khat' ? '✗' :
-    String(s.id).padStart(2,'0');
-}
-
-/* Initial render */
-state.forEach(s => { renderCard(s); renderSlot(s); });
-renderCounts();
-renderRanks();
-
-/* ==============================================
-   EVENT DELEGATION — single listener on list
-   ============================================== */
-listEl.addEventListener('click', e => {
-  const btn = e.target.closest('.btn');
-  if (!btn) return;
-  const card = btn.closest('.sc');
-  if (!card) return;
-
-  const id = +card.dataset.id;
-  const type = btn.dataset.t;
-  const s = state[id - 1];
-
-  // Toggle off if same
-  if (s.status === type) {
-    s.status = null;
-    s.time   = null;
+  // If clicking the same active status → deselect (back to unchecked)
+  if (student.status === newStatus) {
+    student.status = STATUS.UNCHECKED;
+    student.checkTime = null;
   } else {
-    s.status = type;
-    s.time   = Date.now();
-    if (type === 'ma') s.reason = '';
+    student.status = newStatus;
+    student.checkTime = (newStatus === STATUS.PRESENT) ? Date.now() : null;
   }
 
-  renderCard(s);
-  renderSlot(s);
-  renderCounts();
-  renderRanks();
-  saveState();
-});
+  updateCard(student);
+  updateCountSummary();
+  updateTop3();
+  updateAllOrderBadges();
+}
 
-/* Reason input — delegated */
-listEl.addEventListener('input', e => {
-  const inp = e.target.closest('.reason-input');
-  if (!inp) return;
-  const id = +inp.dataset.id;
-  const s  = state[id - 1];
-  s.reason = inp.value;
-  state[id - 1].reason = inp.value;
-  cards[id].rsnEl.textContent = inp.value;
-  saveState();
-});
+/* ─── Set Note (ported from ButtonCheck ช่องกิจกรรม) ─── */
+function setNote(id, text) {
+  const student = state.students.find(s => s.id === id);
+  if (student) student.note = text;
+}
+
+/* ─── Update Single Card DOM (no full re-render → high performance) ─── */
+function updateCard(student) {
+  const cardEl = document.getElementById(`card-${student.id}`);
+  if (!cardEl) return;
+
+  const color = STATUS_COLORS[student.status];
+  const statusClass = {
+    [STATUS.PRESENT]:   's-present',
+    [STATUS.LEAVE]:     's-leave',
+    [STATUS.ABSENT]:    's-absent',
+    [STATUS.UNCHECKED]: 's-unchecked',
+  }[student.status];
+
+  // update border color class
+  cardEl.className = `student-card ${statusClass}`;
+
+  // update avatar SVG
+  const avatarWrap = cardEl.querySelector('.card-avatar-wrap');
+  const badge = avatarWrap.querySelector('.order-badge');
+  const svg = avatarWrap.querySelector('svg');
+  if (svg) svg.outerHTML; // will be replaced below
+  avatarWrap.innerHTML = studentSVG(color) +
+    `<div class="order-badge hidden" id="badge-${student.id}"></div>`;
+
+  // update buttons
+  const btns = cardEl.querySelectorAll('.btn-status');
+  btns[0].className = `btn-status bs-present${student.status===STATUS.PRESENT?' active':''}`;
+  btns[1].className = `btn-status bs-leave${student.status===STATUS.LEAVE?' active':''}`;
+  btns[2].className = `btn-status bs-absent${student.status===STATUS.ABSENT?' active':''}`;
+
+  // show/hide note input
+  const noteWrap = cardEl.querySelector('.card-note-wrap');
+  if (student.status === STATUS.UNCHECKED) noteWrap.classList.add('hidden');
+  else noteWrap.classList.remove('hidden');
+}
+
+/* ─── Update all order badges (ported from SetTouchScreenOrder) ─── */
+function updateAllOrderBadges() {
+  const presentSorted = getPresentSorted();
+  state.students.forEach(s => {
+    const badge = document.getElementById(`badge-${s.id}`);
+    if (!badge) return;
+    const idx = presentSorted.findIndex(p => p.id === s.id);
+    if (idx >= 0) {
+      badge.textContent = idx + 1;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  });
+}
+
+/* ─── Update Count Summary (ported from UpdateCountSummary) ─── */
+function updateCountSummary() {
+  let p = 0, l = 0, a = 0, n = 0;
+  state.students.forEach(s => {
+    if (s.status === STATUS.PRESENT)   p++;
+    else if (s.status === STATUS.LEAVE)   l++;
+    else if (s.status === STATUS.ABSENT)  a++;
+    else n++;
+  });
+  document.getElementById('cnt-present').textContent   = p;
+  document.getElementById('cnt-leave').textContent     = l;
+  document.getElementById('cnt-absent').textContent    = a;
+  document.getElementById('cnt-unchecked').textContent = n;
+}
+
+/* ─── Update Top 3 (ported from Text_TopRanks / funnyPhrases) ─── */
+function updateTop3() {
+  const presentSorted = getPresentSorted();
+  const medals = ['🥇','🥈','🥉'];
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`rank-${i+1}`);
+    if (!el) continue;
+    if (i < presentSorted.length) {
+      const s = presentSorted[i];
+      const name = s.realName || s.name;
+      const tag = i === 0 ? `<span class="rank-tag">MVP</span>` : '';
+      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
+        <span class="rank-name">${name}</span>${tag}`;
+      el.classList.add('filled');
+    } else {
+      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
+        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>`;
+      el.classList.remove('filled');
+    }
+  }
+}
+
+/* ─── Update Clock/Date in Header ─── */
+function updateClock() {
+  const now = getNow();
+  document.getElementById('hdr-day').textContent  = `วัน${THAI_DAYS[now.getDay()]}`;
+  document.getElementById('hdr-date').textContent = `${formatDate(now)}  ${formatTime(now)}`;
+}
+
+/* ─── Reset All (confirmation dialog) ─── */
+function resetAll() {
+  if (!confirm('รีเซ็ตการเช็คชื่อทั้งหมดหรือไม่?')) return;
+  state.students.forEach(s => {
+    s.status = STATUS.UNCHECKED;
+    s.checkTime = null;
+    s.note = '';
+  });
+  renderGrid();
+  updateCountSummary();
+  updateTop3();
+}
+
+/* ─── Show Toast ─── */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('status-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ─── Build Capture Panel ─── */
+function buildCapturePanel() {
+  const now = getNow();
+  document.getElementById('cp-date').textContent = formatDate(now);
+  document.getElementById('cp-day').textContent  = `วัน${THAI_DAYS[now.getDay()]}`;
+
+  let p = 0, l = 0, a = 0, n = 0;
+  state.students.forEach(s => {
+    if (s.status === STATUS.PRESENT) p++;
+    else if (s.status === STATUS.LEAVE) l++;
+    else if (s.status === STATUS.ABSENT) a++;
+    else n++;
+  });
+  document.getElementById('cp-cnt-p').textContent = p;
+  document.getElementById('cp-cnt-l').textContent = l;
+  document.getElementById('cp-cnt-a').textContent = a;
+  document.getElementById('cp-cnt-n').textContent = n;
+
+  // Top 3
+  const presentSorted = getPresentSorted();
+  const medals = ['🥇','🥈','🥉'];
+  let top3Html = '';
+  for (let i = 0; i < 3; i++) {
+    if (i < presentSorted.length) {
+      const s = presentSorted[i];
+      const name = s.realName || s.name;
+      const mvp = i === 0 ? `<div class="cp-rank-tag">MVP 🏆</div>` : '';
+      top3Html += `<div class="cp-rank-item rank-filled">
+        <div class="cp-rank-medal">${medals[i]}</div>
+        <div><div class="cp-rank-name">${name}</div>${mvp}</div>
+      </div>`;
+    } else {
+      top3Html += `<div class="cp-rank-item">
+        <div class="cp-rank-medal">${medals[i]}</div>
+        <div class="cp-rank-empty">รอผู้ท้าชิง</div>
+      </div>`;
+    }
+  }
+  document.getElementById('cp-top3').innerHTML = top3Html;
+
+  // Build sorted student list: มา first (by time), then others in original order
+  const others = state.students.filter(s => s.status !== STATUS.PRESENT);
+  const sorted = [...presentSorted, ...others];
+
+  let gridHtml = '';
+  sorted.forEach((s, idx) => {
+    const color  = STATUS_COLORS[s.status];
+    const cls    = { present:'sp', leave:'sl', absent:'sa', unchecked:'' }[s.status];
+    const label  = STATUS_LABELS[s.status];
+    const note   = s.note ? `<div class="cp-slot-note">${s.note}</div>` : '';
+    const orderBadge = s.status === STATUS.PRESENT
+      ? `<div style="font-size:9px;color:#00994f;font-weight:700;">#${idx+1}</div>` : '';
+    gridHtml += `<div class="cp-slot ${cls}">
+      ${studentSVG(color)}
+      <div class="cp-slot-num">เลขที่ ${s.name}</div>
+      <div class="cp-slot-status">${label}</div>
+      ${orderBadge}${note}
+    </div>`;
+  });
+  document.getElementById('cp-grid').innerHTML = gridHtml;
+}
+
+/* ─── Capture As PNG (ported from Screenshot.cs CaptureDisplay2) ─── */
+async function captureAsPNG() {
+  showToast('⏳ กำลังสร้างภาพ...');
+  buildCapturePanel();
+
+  const panel = document.getElementById('capture-panel');
+  // Temporarily move on-screen for rendering
+  panel.style.left  = '0';
+  panel.style.top   = '0';
+  panel.style.zIndex = '9998';
+  panel.style.visibility = 'hidden';
+
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 150)); // let fonts render
+
+  try {
+    const canvas = await html2canvas(panel, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+      width: panel.scrollWidth,
+      height: panel.scrollHeight,
+      windowWidth: panel.scrollWidth,
+    });
+
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = getNow();
+      const dateStr = `${String(now.getDate()).padStart(2,'0')}_${String(now.getMonth()+1).padStart(2,'0')}_${now.getFullYear()}`;
+      a.href = url;
+      a.download = `เช็คชื่อเข้าแถววันที่_${dateStr}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✅ บันทึกเรียบร้อย!');
+    }, 'image/png');
+
+  } catch (err) {
+    console.error('Capture error:', err);
+    showToast('❌ บันทึกไม่สำเร็จ');
+  } finally {
+    panel.style.left       = '-9999px';
+    panel.style.top        = '0';
+    panel.style.zIndex     = '-1';
+    panel.style.visibility = 'visible';
+  }
+}
+
+/* ─── Initialise ─── */
+function init() {
+  renderGrid();
+  updateCountSummary();
+  updateTop3();
+  updateClock();
+  setInterval(updateClock, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
