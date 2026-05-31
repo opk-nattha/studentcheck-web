@@ -1,9 +1,14 @@
 // ============================================================
 //  screenshot.js — บันทึกสรุปเป็น PNG ด้วย html2canvas
+//  Port จาก indexU captureAsPNG()
+//  ใช้ capture-panel HTML จาก buildCapturePanel() ใน ui.js
 // ============================================================
 
 import { buildCapturePanel } from './ui.js';
 
+const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+// ─── Toast helper ───
 let _toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('status-toast');
@@ -14,37 +19,33 @@ function showToast(msg) {
   _toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// ─── Main export ───
 export async function captureAndDownload(manager) {
   showToast('⏳ กำลังสร้างภาพ...');
 
+  // Build capture panel HTML
   buildCapturePanel(manager);
 
   const panel = document.getElementById('capture-panel');
-
-  // ─── ต้องให้ panel แสดงผลจริง (ไม่ใช่ visibility:hidden)
-  //     ไม่เช่นนั้น html2canvas จะ render ได้แค่สีขาวเปล่า
-  panel.style.position   = 'fixed';
   panel.style.left       = '0';
   panel.style.top        = '0';
   panel.style.zIndex     = '9998';
-  panel.style.visibility = 'visible';  // ต้อง visible!
-  panel.style.opacity    = '1';
+  panel.style.visibility = 'hidden';
 
-  // รอ fonts + layout render
+  // Wait for fonts & layout
   await document.fonts.ready;
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 150));
 
   try {
     const canvas = await html2canvas(panel, {
       backgroundColor: '#ffffff',
       scale: 2,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       logging: false,
-      width:        panel.scrollWidth,
-      height:       panel.scrollHeight,
-      windowWidth:  panel.scrollWidth,
-      windowHeight: panel.scrollHeight,
+      width: panel.scrollWidth,
+      height: panel.scrollHeight,
+      windowWidth: panel.scrollWidth,
     });
 
     canvas.toBlob(blob => {
@@ -67,11 +68,9 @@ export async function captureAndDownload(manager) {
     console.error('Capture error:', err);
     showToast('❌ บันทึกไม่สำเร็จ');
   } finally {
-    // ซ่อนกลับหลัง capture เสร็จ
     panel.style.left       = '-9999px';
     panel.style.top        = '0';
     panel.style.zIndex     = '-1';
-    panel.style.visibility = 'hidden';
-    panel.style.opacity    = '0';
+    panel.style.visibility = 'visible';
   }
 }
