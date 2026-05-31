@@ -2,10 +2,10 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Check — PKC 505</title>
 
-  <!-- Icons (คงเดิมจาก Web project) -->
+  <!-- Icons -->
   <link rel="icon" type="image/svg+xml" href="Asset/icon/logo.svg">
   <link rel="alternate icon" type="image/png" href="Asset/icon/favicon-32x32.png">
   <link rel="shortcut icon" href="Asset/icon/favicon.ico">
@@ -13,42 +13,42 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Student Check">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- html2canvas for PNG export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <!-- CSS -->
   <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
 
-  <!-- ===== Splash Screen (โหลดจาก GitHub ตามเดิม) ===== -->
+  <!-- Splash Screen -->
   <div id="splash-screen" aria-hidden="true">
     <img src="Asset/icon/intro-logo.svg" alt="Student Check" class="splash-logo">
   </div>
 
-  <!-- ===== App ===== -->
+  <!-- Main App -->
   <div id="app">
-
-    <!-- Header -->
-    <header class="app-header" id="app-header"></header>
-
-    <!-- Summary bar: มา / ลา / ขาด / ไม่ได้เช็ค -->
-    <div class="summary-bar" id="summary-bar" role="region" aria-label="สรุปยอด"></div>
-
-    <!-- Top 3 ที่มาก่อน -->
-    <div class="top-ranks" id="top-ranks" role="region" aria-label="อันดับที่มาก่อน"></div>
-
-    <!-- Action buttons -->
-    <div class="action-bar" id="action-bar"></div>
-
-    <!-- Grid นักเรียน 40 คน -->
-    <main class="students-grid" id="students-grid" role="main" aria-label="รายชื่อนักเรียน"></main>
-
-    <!-- Footer -->
-    <footer class="app-footer" id="app-footer"></footer>
-
+    <header id="app-header"></header>
+    <div id="top3-section"></div>
+    <main id="main-content">
+      <div id="student-grid"></div>
+    </main>
   </div>
 
-  <!-- ===== Scripts (ES Modules) ===== -->
+  <!-- Off-screen capture panel for PNG export -->
+  <div id="capture-panel"></div>
+
+  <!-- Status toast -->
+  <div id="status-toast"></div>
+
+  <!-- Scripts (ES Modules) -->
   <script type="module" src="src/app.js"></script>
 
 </body>
