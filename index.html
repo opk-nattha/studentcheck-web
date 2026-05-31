@@ -13,6 +13,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Student Check">
+  <!-- FIX 1: เพิ่ม meta สำหรับ Android Chrome PWA (ของเดิมมีแค่ Apple) -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#ffffff">
 
   <!-- Fonts -->
@@ -20,8 +22,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- html2canvas for PNG export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- FIX 2: ลบ html2canvas CDN ออก — screenshot.js ไม่ได้ใช้งานมันเลย
+       (โหลดมาเปล่าๆ เสียเวลา ~150KB และ block rendering) -->
 
   <!-- CSS -->
   <link rel="stylesheet" href="src/style.css">
