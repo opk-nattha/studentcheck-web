@@ -67,7 +67,7 @@ function buildCanvas(manager) {
   const CELL_W   = 120;
   const CELL_H   = 140;
   const PAD      = 40;
-  const W        = 1080;
+  const W        = 1024;
   const rows     = Math.ceil(STUDENTS.length / COLS);
   const GRID_W   = COLS * CELL_W;
   const GRID_X   = (W - GRID_W) / 2;
@@ -82,9 +82,12 @@ function buildCanvas(manager) {
   const H        = H_HDR + H_COUNTS + H_TOP3 + H_LABEL + H_GRID + H_FOOT;
 
   const canvas   = document.createElement('canvas');
-  canvas.width   = W;
-  canvas.height  = H;
+
+  const SCALE = 4;
+  canvas.width   = W * SCALE;
+  canvas.height  = H * SCALE;
   const ctx      = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
 
   // ── Background ──
   ctx.fillStyle = '#ffffff';
@@ -265,21 +268,21 @@ function buildCanvas(manager) {
 
     // Student number
     ctx.fillStyle   = '#64748b';
-    ctx.font        = `bold 13px Prompt, Sarabun, sans-serif`;
+    ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
     ctx.textAlign   = 'center';
     ctx.textBaseline= 'middle';
-    ctx.fillText(`เลขที่ ${s.id}`, cx + CELL_W / 2, cy + 80);
+    ctx.fillText(`เลขที่ ${s.id}`, cx + CELL_W / 2, cy + 104);
 
     // Status label
     ctx.fillStyle   = color;
-    ctx.font        = `bold 13px Prompt, Sarabun, sans-serif`;
-    ctx.fillText(label, cx + CELL_W / 2, cy + 100);
+    ctx.font        = `bold 11px Prompt, Sarabun, sans-serif`;
+    ctx.fillText(label, cx + CELL_W / 2, cy + 116);
 
     // Reason (if any)
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
-      ctx.font      = `11px Prompt, Sarabun, sans-serif`;
-      ctx.fillText(clip(rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 118);
+      ctx.font      = `10px Prompt, Sarabun, sans-serif`;
+      ctx.fillText(clip(rec.reason, CELL_W - 16), cx + CELL_W / 2, cy + 128);
     }
 
     ctx.textAlign   = 'left';
