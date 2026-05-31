@@ -1,6 +1,9 @@
 // ============================================================
-//  ui.js — สร้างและอัพเดต DOM
-//  ฟังก์ชัน render / update ทั้งหมดอยู่ที่นี่
+//  ui.js — สร้างและอัพเดต DOM (UI สไตล์ indexU)
+//  Layout: Header (logo + clock + count pills + buttons)
+//          Top 3 section
+//          Student Grid (responsive cards)
+//          Capture Panel (off-screen PNG)
 // ============================================================
 
 import { STUDENTS, CLASS_INFO, STATUS_COLORS } from './config.js';
@@ -8,240 +11,334 @@ import { createStudentSVG } from './icons.js';
 
 let _manager = null;
 
-// ===== Init: สร้าง HTML ทั้งหมด =====
+// ─── STATUS labels (Thai) ───
+const STATUS_LABELS = {
+  'มา':         'มา',
+  'ลา':         'ลา',
+  'ขาด':        'ขาด',
+  'ไม่ได้เช็ค': 'ไม่เช็ค',
+};
+
+const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+// ─── Init ───
 export function initUI(manager) {
   _manager = manager;
   buildHeader();
-  buildSummaryBar();
-  buildTopRanks();
-  buildActionBar();
+  buildTop3();
   buildStudentGrid();
-  buildFooter();
   startClock();
 }
 
-// ===== Full re-render เมื่อมีการเปลี่ยนแปลง =====
+// ─── Full update ───
 export function updateUI(changedId) {
-  updateSummaryBar();
-  updateTopRanks();
+  updateCountPills();
+  updateTop3();
   updateAllCards(changedId);
 }
 
-// =============================================
-// ===== Builder Functions =====
-// =============================================
+// ═══════════════════════════════════════
+// Builder functions
+// ═══════════════════════════════════════
 
 function buildHeader() {
   const header = document.getElementById('app-header');
+  const total  = STUDENTS.length;
   header.innerHTML = `
-    <img src="Asset/icon/logo.svg" alt="logo" class="header-logo">
-    <div class="header-title">
-      <h1>${CLASS_INFO.name}</h1>
-      <p>${CLASS_INFO.subtitle}</p>
+    <img src="Asset/icon/logo.svg" alt="Logo" class="header-logo">
+    <div class="header-datetime">
+      <span class="header-day"  id="hdr-day"></span>
+      <span class="header-date" id="hdr-date"></span>
     </div>
-    <div class="header-datetime" id="header-datetime"></div>
+    <div class="header-spacer"></div>
+    <div class="count-pills">
+      <div class="count-pill cp-present"><span class="pill-num" id="cnt-present">0</span>มา</div>
+      <div class="count-pill cp-leave"  ><span class="pill-num" id="cnt-leave">0</span>ลา</div>
+      <div class="count-pill cp-absent" ><span class="pill-num" id="cnt-absent">0</span>ขาด</div>
+      <div class="count-pill cp-none"   ><span class="pill-num" id="cnt-unchecked">${total}</span>ไม่เช็ค</div>
+    </div>
+    <button class="btn-reset" id="btn-reset" title="รีเซ็ตทั้งหมด">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    </button>
+    <button class="btn-capture" id="btn-save">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>บันทึก PNG</span>
+    </button>
   `;
 }
 
-function buildSummaryBar() {
-  const bar = document.getElementById('summary-bar');
-  const items = [
-    { status: 'มา',         icon: '✓' },
-    { status: 'ลา',         icon: '!' },
-    { status: 'ขาด',        icon: '✗' },
-    { status: 'ไม่ได้เช็ค', icon: '?' },
-  ];
-  bar.innerHTML = items.map(item => `
-    <div class="summary-item" data-status="${item.status}">
-      <span class="summary-count" id="count-${encodeStatus(item.status)}">0</span>
-      <span class="summary-label">${item.status}</span>
-    </div>
-  `).join('');
-}
-
-function buildTopRanks() {
-  const section = document.getElementById('top-ranks');
+function buildTop3() {
+  const section = document.getElementById('top3-section');
   section.innerHTML = `
-    <span class="top-ranks-label">🏆 มาก่อน:</span>
-    <div class="top-rank-chips" id="rank-chips"></div>
-  `;
-}
-
-function buildActionBar() {
-  const bar = document.getElementById('action-bar');
-  bar.innerHTML = `
-    <button class="btn btn-save" id="btn-save">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
-      </svg>
-      บันทึก PNG
-    </button>
-    <button class="btn btn-reset" id="btn-reset">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path d="M4 4v5h5M20 20v-5h-5M4.583 14.5A9 9 0 1019.417 9.5"/>
-      </svg>
-      รีเซ็ต
-    </button>
-    <span class="save-status" id="save-status"></span>
+    <div class="top3-label">มาก่อน</div>
+    <div class="top3-list" id="top3-list">
+      <div class="top3-item" id="rank-1"><span class="rank-badge">🥇</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
+      <div class="top3-item" id="rank-2"><span class="rank-badge">🥈</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
+      <div class="top3-item" id="rank-3"><span class="rank-badge">🥉</span><span class="rank-name top3-empty">รอผู้ท้าชิง</span></div>
+    </div>
   `;
 }
 
 function buildStudentGrid() {
-  const grid = document.getElementById('students-grid');
-  grid.innerHTML = STUDENTS.map(s => buildCardHTML(s, 'ไม่ได้เช็ค')).join('');
+  const grid = document.getElementById('student-grid');
+  grid.innerHTML = STUDENTS.map(s => buildCardHTML(s)).join('');
 
-  // Delegate event listeners
+  // Delegate: status buttons
   grid.addEventListener('click', e => {
-    const btn = e.target.closest('.status-btn');
+    const btn = e.target.closest('.btn-status');
     if (!btn) return;
     const card = btn.closest('.student-card');
-    const id = card.dataset.studentId;
+    if (!card) return;
+    const id     = card.dataset.studentId;
     const status = btn.dataset.status;
-
     _manager.setStatus(id, status);
     flashCard(card);
   });
 
+  // Delegate: note input
   grid.addEventListener('input', e => {
-    const input = e.target.closest('.reason-input');
+    const input = e.target.closest('.card-note');
     if (!input) return;
     const card = input.closest('.student-card');
+    if (!card) return;
     _manager.setReason(card.dataset.studentId, input.value);
   });
 }
 
-function buildFooter() {
-  const footer = document.getElementById('app-footer');
-  footer.innerHTML = `Student Check — ${CLASS_INFO.name} &nbsp;|&nbsp; Built for GitHub Pages`;
-}
-
-function buildCardHTML(s, status) {
+function buildCardHTML(s) {
+  const status    = 'ไม่ได้เช็ค';
+  const displayName = s.realName ? s.realName : `เลขที่ ${s.id}`;
   return `
-    <div class="student-card" data-student-id="${s.id}" data-status="${status}">
-      <div class="card-icon-area">
-        ${createStudentSVG(status)}
-        <span class="arrival-badge hidden" id="badge-${s.id}"></span>
-      </div>
-      <div class="card-body">
-        <div class="card-number">${s.realName ? s.realName : `เลขที่ ${s.id}`}</div>
-        <div class="status-buttons">
-          <button class="status-btn" data-status="มา">มา</button>
-          <button class="status-btn" data-status="ลา">ลา</button>
-          <button class="status-btn" data-status="ขาด">ขาด</button>
+    <div class="student-card s-unchecked" data-student-id="${s.id}" id="card-${s.id}">
+      <div class="card-inner">
+        <div class="card-avatar-wrap">
+          ${createStudentSVG(status)}
+          <div class="order-badge hidden" id="badge-${s.id}"></div>
         </div>
-        <input
-          class="reason-input"
-          type="text"
-          placeholder="เหตุผล..."
-          maxlength="30"
-          id="reason-${s.id}"
-        >
+        <div class="card-info">
+          <div class="card-num">เลขที่ ${s.id}</div>
+          <div class="card-name">${displayName}</div>
+        </div>
+        <div class="card-actions">
+          <div class="card-btns">
+            <button class="btn-status bs-present" data-status="มา">มา</button>
+            <button class="btn-status bs-leave"   data-status="ลา">ลา</button>
+            <button class="btn-status bs-absent"  data-status="ขาด">ขาด</button>
+          </div>
+          <div class="card-note-wrap hidden">
+            <input class="card-note" id="note-${s.id}" type="text" maxlength="40"
+              placeholder="หมายเหตุ (ไม่บังคับ)">
+          </div>
+        </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-// =============================================
-// ===== Updater Functions =====
-// =============================================
+// ═══════════════════════════════════════
+// Updater functions
+// ═══════════════════════════════════════
 
-function updateSummaryBar() {
+function updateCountPills() {
   const counts = _manager.getCounts();
-  ['มา','ลา','ขาด','ไม่ได้เช็ค'].forEach(s => {
-    const el = document.getElementById(`count-${encodeStatus(s)}`);
-    if (el) el.textContent = counts[s];
-  });
+  document.getElementById('cnt-present').textContent   = counts['มา']         || 0;
+  document.getElementById('cnt-leave').textContent     = counts['ลา']         || 0;
+  document.getElementById('cnt-absent').textContent    = counts['ขาด']        || 0;
+  document.getElementById('cnt-unchecked').textContent = counts['ไม่ได้เช็ค'] || 0;
 }
 
-function updateTopRanks() {
-  const chips = document.getElementById('rank-chips');
-  if (!chips) return;
-  const top3 = _manager.getTopN(3);
-
-  if (top3.length === 0) {
-    chips.innerHTML = '<span style="font-size:12px;color:#aaa">รอเช็คชื่อ...</span>';
-    return;
+function updateTop3() {
+  const presentSorted = _manager.getSortedPresent();
+  const medals        = ['🥇','🥈','🥉'];
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`rank-${i + 1}`);
+    if (!el) continue;
+    if (i < presentSorted.length) {
+      const s    = presentSorted[i];
+      const name = s.realName || `เลขที่ ${s.id}`;
+      const mvp  = i === 0 ? `<span class="rank-tag">MVP</span>` : '';
+      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
+        <span class="rank-name">${name}</span>${mvp}`;
+      el.classList.add('filled');
+    } else {
+      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
+        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>`;
+      el.classList.remove('filled');
+    }
   }
-  chips.innerHTML = top3.map(t => `<span class="rank-chip">${t}</span>`).join('');
 }
 
 function updateAllCards(changedId) {
   const presentList = _manager.getSortedPresent();
-  const ordersMap = {};
+  const ordersMap   = {};
   presentList.forEach((s, i) => ordersMap[s.id] = i + 1);
 
   STUDENTS.forEach(s => {
-    const rec = _manager.getRecord(s.id);
-    const card = document.querySelector(`.student-card[data-student-id="${s.id}"]`);
-    if (!card) return;
+    const rec  = _manager.getRecord(s.id);
+    const card = document.getElementById(`card-${s.id}`);
+    if (!card || !rec) return;
 
-    // Update status attr
-    card.dataset.status = rec.status;
+    // Status class
+    const statusClass = {
+      'มา':         's-present',
+      'ลา':         's-leave',
+      'ขาด':        's-absent',
+      'ไม่ได้เช็ค': 's-unchecked',
+    }[rec.status] || 's-unchecked';
+    card.className = `student-card ${statusClass}`;
 
-    // Update icon
-    const iconArea = card.querySelector('.card-icon-area');
-    const badge = iconArea.querySelector('.arrival-badge');
-    // Replace SVG
-    const oldSvg = iconArea.querySelector('svg');
-    if (oldSvg) {
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = createStudentSVG(rec.status);
-      const newSvg = wrapper.querySelector('svg');
-      iconArea.replaceChild(newSvg, oldSvg);
+    // Avatar SVG
+    const avatarWrap = card.querySelector('.card-avatar-wrap');
+    const oldSVG     = avatarWrap.querySelector('svg');
+    if (oldSVG) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = createStudentSVG(rec.status);
+      avatarWrap.replaceChild(tmp.firstElementChild, oldSVG);
     }
 
-    // Arrival badge
-    if (ordersMap[s.id]) {
-      badge.textContent = ordersMap[s.id];
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
+    // Order badge
+    const badge = document.getElementById(`badge-${s.id}`);
+    if (badge) {
+      if (ordersMap[s.id]) {
+        badge.textContent = ordersMap[s.id];
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
     }
 
     // Status buttons
-    card.querySelectorAll('.status-btn').forEach(btn => {
+    card.querySelectorAll('.btn-status').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.status === rec.status);
     });
 
-    // Reason input visibility
-    const input = card.querySelector('.reason-input');
-    if (input) {
-      input.classList.toggle('visible', rec.status !== 'ไม่ได้เช็ค');
-      if (rec.reason !== input.value) input.value = rec.reason;
+    // Note input visibility
+    const noteWrap = card.querySelector('.card-note-wrap');
+    const noteInput = card.querySelector('.card-note');
+    if (noteWrap) noteWrap.classList.toggle('hidden', rec.status === 'ไม่ได้เช็ค');
+    if (noteInput && rec.reason !== undefined && noteInput.value !== rec.reason) {
+      noteInput.value = rec.reason || '';
     }
   });
 }
 
-// ===== Flash animation on status change =====
+// ─── Flash animation on card change ───
 function flashCard(card) {
   card.classList.remove('flash');
-  void card.offsetWidth; // reflow
+  void card.offsetWidth;
   card.classList.add('flash');
 }
 
-// ===== Clock =====
+// ─── Clock ───
 function startClock() {
-  const el = document.getElementById('header-datetime');
-  if (!el) return;
-
   function tick() {
     const now = new Date();
-    const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-    const day = days[now.getDay()];
-    const d = String(now.getDate()).padStart(2,'0');
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    const y = now.getFullYear();
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(now.getMinutes()).padStart(2,'0');
-    const ss = String(now.getSeconds()).padStart(2,'0');
-    el.innerHTML = `วัน${day} ${d}/${m}/${y}<br>${hh}:${mm}:${ss} น.`;
+    const dayEl  = document.getElementById('hdr-day');
+    const dateEl = document.getElementById('hdr-date');
+    if (!dayEl || !dateEl) return;
+
+    const d  = String(now.getDate()).padStart(2, '0');
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const y  = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+
+    dayEl.textContent  = `วัน${THAI_DAYS[now.getDay()]}`;
+    dateEl.textContent = `${d}/${mo}/${y}  ${hh}:${mm} น.`;
   }
   tick();
-  setInterval(tick, 1000);
+  setInterval(tick, 30000);
 }
 
-// ===== Utility =====
-function encodeStatus(s) {
-  const map = { 'มา': 'ma', 'ลา': 'la', 'ขาด': 'khat', 'ไม่ได้เช็ค': 'unchecked' };
-  return map[s] || s;
+// ─── Build capture panel HTML (for PNG export) ───
+export function buildCapturePanel(manager) {
+  const now    = new Date();
+  const counts = manager.getCounts();
+  const presentSorted = manager.getSortedPresent();
+  const medals = ['🥇','🥈','🥉'];
+
+  const d  = String(now.getDate()).padStart(2,'0');
+  const mo = String(now.getMonth()+1).padStart(2,'0');
+  const y  = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const dateStr = `${d}/${mo}/${y}`;
+  const dayStr  = `วัน${THAI_DAYS[now.getDay()]}  ${hh}:${mm} น.`;
+
+  // Top 3 HTML
+  let top3Html = '';
+  for (let i = 0; i < 3; i++) {
+    if (i < presentSorted.length) {
+      const s    = presentSorted[i];
+      const name = s.realName || `เลขที่ ${s.id}`;
+      const mvp  = i === 0 ? `<div class="cp-rank-tag">MVP 🏆</div>` : '';
+      top3Html += `<div class="cp-rank-item rank-filled">
+        <div class="cp-rank-medal">${medals[i]}</div>
+        <div><div class="cp-rank-name">${name}</div>${mvp}</div>
+      </div>`;
+    } else {
+      top3Html += `<div class="cp-rank-item">
+        <div class="cp-rank-medal">${medals[i]}</div>
+        <div class="cp-rank-empty">รอผู้ท้าชิง</div>
+      </div>`;
+    }
+  }
+
+  // Student grid: present first (sorted), then rest in original order
+  const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
+  const sorted     = [...presentSorted, ...nonPresent];
+
+  let gridHtml = '';
+  sorted.forEach((s, idx) => {
+    const rec   = manager.getRecord(s.id);
+    const color = STATUS_COLORS[rec.status] || '#94A3B8';
+    const cls   = { 'มา':'sp', 'ลา':'sl', 'ขาด':'sa' }[rec.status] || '';
+    const label = STATUS_LABELS[rec.status] || 'ไม่เช็ค';
+    const note  = rec.reason ? `<div class="cp-slot-note">${rec.reason}</div>` : '';
+    const orderBadge = rec.status === 'มา'
+      ? `<div style="font-size:9px;color:#00994f;font-weight:700;">#${idx+1}</div>` : '';
+
+    // use inline SVG from icons.js
+    const { createStudentSVG: _svg } = { createStudentSVG };  // alias for clarity
+    gridHtml += `<div class="cp-slot ${cls}">
+      ${createStudentSVG(rec.status)}
+      <div class="cp-slot-num">เลขที่ ${s.id}</div>
+      <div class="cp-slot-status">${label}</div>
+      ${orderBadge}${note}
+    </div>`;
+  });
+
+  const panel = document.getElementById('capture-panel');
+  panel.innerHTML = `
+    <div class="cp-header">
+      <div class="cp-header-left">
+        <img src="Asset/icon/logo.svg" class="cp-logo" alt="Logo">
+        <div class="cp-title-block">
+          <div class="cp-title">รายงานการเข้าแถว</div>
+          <div class="cp-subtitle">${CLASS_INFO.name} — ${CLASS_INFO.subtitle}</div>
+        </div>
+      </div>
+      <div class="cp-datetime">
+        <div class="cp-date-big">${dateStr}</div>
+        <div class="cp-day">${dayStr}</div>
+      </div>
+    </div>
+    <div class="cp-counts">
+      <div class="cp-count-item ccp"><div class="cp-count-num">${counts['มา']||0}</div><div class="cp-count-lbl">มา</div></div>
+      <div class="cp-count-item ccl"><div class="cp-count-num">${counts['ลา']||0}</div><div class="cp-count-lbl">ลา</div></div>
+      <div class="cp-count-item cca"><div class="cp-count-num">${counts['ขาด']||0}</div><div class="cp-count-lbl">ขาด</div></div>
+      <div class="cp-count-item ccn"><div class="cp-count-num">${counts['ไม่ได้เช็ค']||0}</div><div class="cp-count-lbl">ไม่เช็ค</div></div>
+    </div>
+    <div class="cp-top3">${top3Html}</div>
+    <div class="cp-section-title">รายชื่อนักเรียน (เรียงตามลำดับการมา)</div>
+    <div class="cp-grid">${gridHtml}</div>
+  `;
 }
