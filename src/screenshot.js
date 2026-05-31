@@ -67,7 +67,7 @@ function buildCanvas(manager) {
   const CELL_W   = 120;
   const CELL_H   = 140;
   const PAD      = 40;
-  const W        = 1024;
+  const W        = 1080;
   const rows     = Math.ceil(STUDENTS.length / COLS);
   const GRID_W   = COLS * CELL_W;
   const GRID_X   = (W - GRID_W) / 2;
