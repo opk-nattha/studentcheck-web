@@ -90,14 +90,18 @@ export async function captureAndDownload(manager) {
   }
 }
 
-// ─── Helper: วาดข้อความกึ่งกลาง (แก้บั๊ก iPad) ───────────────────────────
-// ctx.textAlign='center' ทำงานผิดปกติบน iPad Safari กับฟอนต์ไทย
+// ─── Helpers: วาดข้อความ (แก้บั๊ก iPad) ─────────────────────────────────────
+// ctx.textAlign = 'center' | 'right' ทำงานผิดปกติบน iPad Safari กับฟอนต์ไทย
 // วิธีแก้: ใช้ textAlign='left' ตลอด แล้วชดเชย x ด้วย measureText() เอง
+
 function fillTextCenter(ctx, text, x, y) {
-  const savedAlign = ctx.textAlign;
   ctx.textAlign = 'left';
   ctx.fillText(text, x - ctx.measureText(text).width / 2, y);
-  ctx.textAlign = savedAlign;
+}
+
+function fillTextRight(ctx, text, x, y) {
+  ctx.textAlign = 'left';
+  ctx.fillText(text, x - ctx.measureText(text).width, y);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -160,15 +164,13 @@ function buildCanvas(manager) {
   const dateStr = `${dd}/${mo}/${yr}`;
   const dayStr  = `วัน${THAI_DAYS[now.getDay()]}  ${hh}:${mm} น.`;
 
-  // ด้านขวา: ยังใช้ textAlign='right' ได้ปกติ (ข้อความซ้ายชิดขอบขวา ไม่ใช่กึ่งกลาง)
+  // ด้านขวา: ใช้ fillTextRight แทน textAlign='right' (แก้บั๊ก iPad เบี้ยวขวา)
   ctx.fillStyle = '#1e293b';
   ctx.font      = 'bold 28px Prompt, Sarabun, sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(dateStr, W - PAD, y + H_HDR / 2 - 12);
+  fillTextRight(ctx, dateStr, W - PAD, y + H_HDR / 2 - 12);
   ctx.font      = '16px Prompt, Sarabun, sans-serif';
   ctx.fillStyle = '#64748b';
-  ctx.fillText(dayStr, W - PAD, y + H_HDR / 2 + 16);
-  ctx.textAlign = 'left';
+  fillTextRight(ctx, dayStr, W - PAD, y + H_HDR / 2 + 16);
   y += H_HDR;
 
   // ── Count bar ──
