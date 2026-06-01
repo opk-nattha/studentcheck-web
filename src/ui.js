@@ -45,7 +45,7 @@ function buildHeader() {
   const header = document.getElementById('app-header');
   const total  = STUDENTS.length;
   header.innerHTML = `
-    <img src="Asset/icon/logo.svg" alt="Logo" class="header-logo">
+    <img src="assets/art/icon/logo.svg" alt="Logo" class="header-logo">
     <div class="header-datetime">
       <span class="header-day"  id="hdr-day"></span>
       <span class="header-date" id="hdr-date"></span>
@@ -320,7 +320,7 @@ export function buildCapturePanel(manager) {
   panel.innerHTML = `
     <div class="cp-header">
       <div class="cp-header-left">
-        <img src="Asset/icon/logo.svg" class="cp-logo" alt="Logo">
+        <img src="assets/art/icon/logo.svg" class="cp-logo" alt="Logo">
         <div class="cp-title-block">
           <div class="cp-title">รายงานการเข้าแถว</div>
           <div class="cp-subtitle">${CLASS_INFO.name} — ${CLASS_INFO.subtitle}</div>
