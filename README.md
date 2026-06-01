@@ -7,4 +7,8 @@
 ![MIT License](https://img.shields.io/badge/license-MIT-green)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
-https://opk-nattha.github.io/studentcheck-web/
+<p align="center">
+  <img src="assets/art/icon/intro-logo.svg" alt="App Icon" width="512" height="128" />
+</p>
+**Go to web app (https://opk-nattha.github.io/studentcheck-web/)**
+
