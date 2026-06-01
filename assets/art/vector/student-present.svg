@@ -1,15 +1,15 @@
 <svg viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
   <!-- Head -->
-  <circle cx="20" cy="14" r="12" fill="#FF4F4F"/>
+  <circle cx="20" cy="14" r="12" fill="#00BF63"/>
   <!-- Hair -->
-  <path d="M8 12 Q8 2 20 2 Q32 2 32 12" fill="#E13131"/>
+  <path d="M8 12 Q8 2 20 2 Q32 2 32 12" fill="#00A145"/>
   <!-- Eyes -->
   <circle cx="15.5" cy="13" r="2.2" fill="rgba(255,255,255,0.92)"/>
   <circle cx="24.5" cy="13" r="2.2" fill="rgba(255,255,255,0.92)"/>
   <!-- Smile -->
   <path d="M14.5 18.5 Q20 22 25.5 18.5" stroke="rgba(255,255,255,0.88)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
   <!-- Body -->
-  <path d="M5 34 C5 27 12 25 20 25 C28 25 35 27 35 34 L36 51 Q36 52 34 52 L6 52 Q4 52 4 51 Z" fill="#FF4F4F"/>
+  <path d="M5 34 C5 27 12 25 20 25 C28 25 35 27 35 34 L36 51 Q36 52 34 52 L6 52 Q4 52 4 51 Z" fill="#00BF63"/>
   <!-- Collar -->
   <path d="M17 25 L20 29.5 L23 25" fill="rgba(255,255,255,0.28)"/>
 </svg>
