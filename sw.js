@@ -29,7 +29,7 @@ const ASSETS_TO_CACHE = [
   './assets/icons/icon-512.png',
 
   // brand images (SVG)
-  './assets/images/logo.svg',
+  './assets/icons/icon.svg',
   './assets/images/intro-logo.svg',
 
   // student status vectors (SVG)
