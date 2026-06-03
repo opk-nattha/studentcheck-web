@@ -1,13 +1,13 @@
 // ============================================================
 //  icons.js — SVG vector นักเรียน (สไตล์ indexU)
-//  Vector ต้นฉบับอยู่ที่ assets/art/vector/student-*.svg
+//  Vector ต้นฉบับอยู่ที่ assets/vectors/student-*.svg
 //  ฟังก์ชันนี้ generate inline SVG ที่ปรับสีตามสถานะ
 // ============================================================
 
 import { STATUS_COLORS } from './config.js';
 
 /**
- * Vector paths นักเรียน — ดึงจาก assets/art/vector/student-*.svg
+ * Vector paths นักเรียน — ดึงจาก assets/vectors/student-*.svg
  * สไตล์: simple iconic character (head + body + collar)
  * viewBox: 0 0 40 52
  */
@@ -23,7 +23,7 @@ function shadeColor(hex, pct) {
 
 /**
  * สร้าง inline SVG นักเรียน
- * Vector base อ้างอิงจาก assets/art/vector/student-unchecked.svg (รูปทรง)
+ * Vector base อ้างอิงจาก assets/vectors/student-unchecked.svg (รูปทรง)
  * สีปรับตามสถานะผ่าน STATUS_COLORS
  *
  * @param {string} status - 'มา' | 'ลา' | 'ขาด' | 'ไม่ได้เช็ค'
