@@ -8,12 +8,12 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
 <p align="left">
-  <img src="assets/art/icon/preview.svg" alt="App Icon" width="768" height="384" />
+  <img src="assets/images/preview.svg" alt="App Icon" width="768" height="384" />
 </p>
 
 <p align="left">
   <a href="https://opk-nattha.github.io/studentcheck-web" rel="noopener noreferrer">
-    <img src="assets/ui/en/button-launch-en.svg" alt="App Icon" width="256" height="64" />
+    <img src="assets/buttons/button-launch-en.svg" alt="App Icon" width="256" height="64" />
   </a>
 </p>
 
