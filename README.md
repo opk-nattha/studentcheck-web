@@ -11,5 +11,9 @@
   <img src="assets/art/icon/preview.svg" alt="App Icon" width="768" height="384" />
 </p>
 
-**Go to web app (https://opk-nattha.github.io/studentcheck-web/)**
+<p align="left">
+  <a href="https://opk-nattha.github.io/studentcheck-web" target="_blank">
+    <img src="assets/ui/en/button-launch-en.svg" alt="App Icon" width="256" height="64" />
+  </a>
+</p>
 
