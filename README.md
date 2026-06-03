@@ -8,7 +8,7 @@
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
 <p align="center">
-  <img src="assets/art/icon/intro-logo.svg" alt="App Icon" width="512" height="256" />
+  <img src="assets/art/icon/preview-1024x512.svg" alt="App Icon" width="512" height="256" />
 </p>
 
 **Go to web app (https://opk-nattha.github.io/studentcheck-web/)**
