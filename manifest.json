@@ -1,0 +1,26 @@
+{
+  "name": "Student Check",
+  "short_name": "StudentCheck",
+  "description": "ระบบเช็คชื่อนักเรียน",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "assets/art/icon/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/art/icon/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

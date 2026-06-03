@@ -5,15 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Check</title>
 
+  <!-- PWA Manifest (Android Add to Home Screen) -->
+  <link rel="manifest" href="manifest.json">
+
   <!-- Icons -->
   <link rel="icon" type="image/svg+xml" href="assets/art/icon/logo.svg">
   <link rel="alternate icon" type="image/png" href="assets/art/icon/favicon-32x32.png">
   <link rel="shortcut icon" href="assets/art/icon/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/art/icon/apple-touch-icon.png">
+
+  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Student Check">
-  <!-- FIX 1: เพิ่ม meta สำหรับ Android Chrome PWA (ของเดิมมีแค่ Apple) -->
+
+  <!-- Android PWA -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#ffffff">
 
@@ -21,9 +27,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- FIX 2: ลบ html2canvas CDN ออก — screenshot.js ไม่ได้ใช้งานมันเลย
-       (โหลดมาเปล่าๆ เสียเวลา ~150KB และ block rendering) -->
 
   <!-- CSS -->
   <link rel="stylesheet" href="src/style.css">
@@ -49,6 +52,21 @@
 
   <!-- Status toast -->
   <div id="status-toast"></div>
+
+  <!-- Android PWA Install Banner -->
+  <div id="pwa-install-banner" class="pwa-banner" role="dialog" aria-label="เพิ่มแอปไปยังหน้าจอหลัก" hidden>
+    <div class="pwa-banner-content">
+      <img src="assets/art/icon/apple-touch-icon.png" alt="Student Check icon" class="pwa-banner-icon">
+      <div class="pwa-banner-text">
+        <strong>เพิ่มไปยังหน้าจอหลัก</strong>
+        <span>ใช้งานได้เหมือนแอปจริง — รวดเร็ว ไม่ต้องเปิดเบราว์เซอร์</span>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button id="pwa-install-btn" class="pwa-btn-install">ติดตั้ง</button>
+      <button id="pwa-dismiss-btn" class="pwa-btn-dismiss" aria-label="ปิด">✕</button>
+    </div>
+  </div>
 
   <!-- Scripts (ES Modules) -->
   <script type="module" src="src/app.js"></script>
