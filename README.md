@@ -12,7 +12,7 @@
 </p>
 
 <p align="left">
-  <a href="https://opk-nattha.github.io/studentcheck-web" target="_blank" rel="noopener noreferrer">
+  <a href="https://opk-nattha.github.io/studentcheck-web" rel="noopener noreferrer">
     <img src="assets/ui/en/button-launch-en.svg" alt="App Icon" width="256" height="64" />
   </a>
 </p>
