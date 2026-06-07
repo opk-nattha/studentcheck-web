@@ -48,7 +48,12 @@ export async function captureAndDownload(manager) {
     const y   = now.getFullYear();
     const filename = `เช็คชื่อเข้าแถววันที่_${dd}_${mo}_${y}.png`;
 
+    // BUG FIX: canvas.toBlob() อาจ return null ถ้า canvas ถูก taint หรือ memory เต็ม
     canvas.toBlob(async blob => {
+      if (!blob) {
+        showToast('❌ สร้างภาพไม่สำเร็จ (canvas error)');
+        return;
+      }
       if (isIOS) {
         // iOS: ลอง Web Share API ก่อน (iOS 15+)
         if (navigator.share && navigator.canShare) {

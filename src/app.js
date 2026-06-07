@@ -22,11 +22,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('#btn-save')) {
       captureAndDownload(manager);
     }
+    // BUG FIX: เปลี่ยนจาก confirm() เป็น custom dialog
+    // confirm() อาจถูก block ใน standalone PWA mode บางเบราว์เซอร์
     if (e.target.closest('#btn-reset')) {
-      if (confirm('รีเซ็ตการเช็คชื่อทั้งหมดหรือไม่?')) {
+      showConfirmDialog('รีเซ็ตการเช็คชื่อทั้งหมดหรือไม่?', () => {
         manager.reset();
         updateUI(null);
-      }
+      });
     }
   });
 
@@ -36,6 +38,46 @@ window.addEventListener('DOMContentLoaded', () => {
   // ── PWA: Android Add to Home Screen prompt ───────────────
   initInstallBanner();
 });
+
+// ─────────────────────────────────────────────────────────────
+//  Custom Confirm Dialog (แทน window.confirm ที่ถูก block ใน PWA)
+// ─────────────────────────────────────────────────────────────
+function showConfirmDialog(message, onConfirm) {
+  // ป้องกัน dialog ซ้อนกัน
+  if (document.querySelector('.confirm-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.innerHTML = `
+    <div class="confirm-dialog">
+      <p class="confirm-message">${message}</p>
+      <div class="confirm-actions">
+        <button class="confirm-btn-cancel">ยกเลิก</button>
+        <button class="confirm-btn-ok">รีเซ็ต</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('confirm-overlay--visible'));
+
+  function close() {
+    overlay.classList.remove('confirm-overlay--visible');
+    overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
+  }
+
+  overlay.querySelector('.confirm-btn-cancel').addEventListener('click', close);
+  overlay.querySelector('.confirm-btn-ok').addEventListener('click', () => {
+    close();
+    onConfirm();
+  });
+  // กด backdrop เพื่อปิด
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  // กด Escape เพื่อปิด
+  const onKey = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } };
+  document.addEventListener('keydown', onKey);
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Service Worker
@@ -104,7 +146,6 @@ function initInstallBanner() {
 
 function showBanner(el) {
   el.hidden = false;
-  // เล็กน้อย delay เพื่อให้ CSS transition ทำงาน
   requestAnimationFrame(() => {
     requestAnimationFrame(() => el.classList.add('pwa-banner--visible'));
   });

@@ -3,7 +3,8 @@
 //  Port มาจาก AttendanceManager.cs + ButtonCheck.cs
 // ============================================================
 
-import { STUDENTS, STATUS_COLORS, RANK_PHRASES } from './config.js';
+// BUG FIX: ลบ STATUS_COLORS, RANK_PHRASES ออก — import มาแต่ไม่เคยใช้ใน file นี้
+import { STUDENTS } from './config.js';
 
 export class AttendanceManager {
   constructor() {
@@ -103,7 +104,7 @@ export class AttendanceManager {
   // ===== Event system =====
   onChange(fn) {
     this.listeners.push(fn);
-    return () => this.listeners = this.listeners.filter(l => l !== fn);
+    return () => { this.listeners = this.listeners.filter(l => l !== fn); };
   }
 
   _notify(id) {
