@@ -49,15 +49,13 @@ function showConfirmDialog(message, onConfirm) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
 
-  // [SECURITY FIX] เดิมใช้ innerHTML template literal ซึ่ง inject message โดยตรง
-  // → XSS ถ้า message มาจาก input ของผู้ใช้
-  // แก้โดย: สร้าง DOM element แยกส่วน แล้วใช้ textContent แทน innerHTML สำหรับข้อความ
+  // [SECURITY FIX] ใช้ textContent แทน innerHTML เพื่อป้องกัน XSS
   const dialog = document.createElement('div');
   dialog.className = 'confirm-dialog';
 
   const msg = document.createElement('p');
   msg.className = 'confirm-message';
-  msg.textContent = message;        // ← textContent: safe, ไม่ parse HTML
+  msg.textContent = message; // ← safe: ไม่ parse HTML
 
   const actions = document.createElement('div');
   actions.className = 'confirm-actions';
@@ -82,11 +80,34 @@ function showConfirmDialog(message, onConfirm) {
     overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
 
-  cancelBtn.addEventListener('click', close);
-  okBtn.addEventListener('click', () => { close(); onConfirm(); });
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  const onKey = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } };
+  // [BUG FIX] เดิม onKey listener ไม่ถูก removeEventListener
+  // เมื่อกด cancelBtn / okBtn / backdrop → listener สะสมทุกครั้งที่เปิด dialog
+  // แก้: เรียก removeEventListener ใน *ทุก* เส้นทางที่ปิด dialog
+  const onKey = e => {
+    if (e.key === 'Escape') {
+      close();
+      document.removeEventListener('keydown', onKey);
+    }
+  };
   document.addEventListener('keydown', onKey);
+
+  cancelBtn.addEventListener('click', () => {
+    close();
+    document.removeEventListener('keydown', onKey); // ← FIX: remove listener
+  });
+
+  okBtn.addEventListener('click', () => {
+    close();
+    document.removeEventListener('keydown', onKey); // ← FIX: remove listener
+    onConfirm();
+  });
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) {
+      close();
+      document.removeEventListener('keydown', onKey); // ← FIX: remove listener
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -95,20 +116,28 @@ function showConfirmDialog(message, onConfirm) {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
-  window.addEventListener('load', () => {
+  // [FIX] ถ้า document โหลดเสร็จแล้ว (readyState === 'complete') ให้ register ทันที
+  // ป้องกันกรณี 'load' event ยิงก่อน listener นี้ถูกผูก (เช่นใน bfcache restore)
+  if (document.readyState === 'complete') {
     navigator.serviceWorker
       .register('./sw.js')
       .catch(err => console.warn('[SW] Registration failed:', err));
-  });
+  } else {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('./sw.js')
+        .catch(err => console.warn('[SW] Registration failed:', err));
+    });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
 //  Android Install Banner (beforeinstallprompt)
 // ─────────────────────────────────────────────────────────────
 function initInstallBanner() {
-  const banner      = document.getElementById('pwa-install-banner');
-  const installBtn  = document.getElementById('pwa-install-btn');
-  const dismissBtn  = document.getElementById('pwa-dismiss-btn');
+  const banner     = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
 
   if (!banner || !installBtn || !dismissBtn) return;
 

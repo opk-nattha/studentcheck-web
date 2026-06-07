@@ -3,16 +3,16 @@
 //  ไม่พึ่ง html2canvas → ไม่มีปัญหา blank/white output
 // ============================================================
 
-// [REFACTOR] import shared constants จาก config แทนการประกาศซ้ำ
-// - shadeColor   (เดิมชื่อ shadeHex ใน file นี้ — ลบ duplicate)
-// - THAI_DAYS    (เดิมประกาศซ้ำใน ui.js และ screenshot.js)
-// - STATUS_LABELS (เดิมชื่อ LABEL ใน file นี้)
-// - STATUS_BG    (เดิมชื่อ BG ใน file นี้)
 import { STUDENTS, CLASS_INFO, STATUS_COLORS, STATUS_BG, STATUS_LABELS, THAI_DAYS, shadeColor } from './config.js';
 
 // iOS detection — คำนวณครั้งเดียวระดับ module
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (/Mac/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
+// [PERFORMANCE FIX] ใช้ devicePixelRatio จริง แต่จำกัดไม่เกิน 2
+// เดิม SCALE=4 ตายตัว → canvas 4096×~4560px = ~75MB บน RAM → ช้าหรือ OOM บนมือถือ
+// ใหม่: cap ที่ 2 → canvas ~2048×~2280px (~9MB) คุณภาพยังดีพอสำหรับ PNG
+const CANVAS_SCALE = Math.min(Math.round(window.devicePixelRatio || 2), 2);
 
 // ─── Toast ───
 let _toastTimer = null;
@@ -38,9 +38,16 @@ export async function captureAndDownload(manager) {
     const y   = now.getFullYear();
     const filename = `เช็คชื่อเข้าแถววันที่_${dd}_${mo}_${y}.png`;
 
-    // [BUG FIX] ครอบ toBlob callback ด้วย try/catch
-    // เดิม: error ภายใน callback ไม่ถูก catch → silent failure
+    // [BUG FIX] เพิ่ม timeout ป้องกัน toBlob ไม่เรียก callback (พบในบาง browser/iOS)
+    // ถ้า 15 วินาทีผ่านไปแล้วยังไม่ได้ blob → แสดง error แทนค้าง
+    let blobReceived = false;
+    const blobTimeout = setTimeout(() => {
+      if (!blobReceived) showToast('❌ สร้างภาพ timeout — ลองใหม่อีกครั้ง');
+    }, 15_000);
+
     canvas.toBlob(async blob => {
+      blobReceived = true;
+      clearTimeout(blobTimeout);
       try {
         if (!blob) {
           showToast('❌ สร้างภาพไม่สำเร็จ (canvas error)');
@@ -64,8 +71,6 @@ export async function captureAndDownload(manager) {
             }
           }
           // Fallback iOS: เปิด blob ใน tab ใหม่ให้กดค้างบันทึก
-          // [NOTE] revokeObjectURL หลัง 120s (เพิ่มจาก 60s)
-          // เผื่อผู้ใช้ใช้เวลานาวิเกทไปยัง tab ใหม่และกดค้าง
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
           showToast('📸 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"');
@@ -93,7 +98,7 @@ export async function captureAndDownload(manager) {
   }
 }
 
-// ─── Helpers: วาดข้อความ (แก้บั๊ก iPad) ─────────────────────────────────────
+// ─── Helpers: วาดข้อความ ─────────────────────────────────────
 function fillTextCenter(ctx, text, x, y) {
   ctx.textAlign = 'left';
   ctx.fillText(text, x - ctx.measureText(text).width / 2, y);
@@ -123,7 +128,7 @@ function buildCanvas(manager) {
   const H        = H_HDR + H_COUNTS + H_TOP3 + H_LABEL + H_GRID + H_FOOT;
 
   const canvas   = document.createElement('canvas');
-  const SCALE    = 4;
+  const SCALE    = CANVAS_SCALE;
   canvas.width   = W * SCALE;
   canvas.height  = H * SCALE;
   const ctx      = canvas.getContext('2d');
@@ -261,6 +266,11 @@ function buildCanvas(manager) {
   const nonPresent = STUDENTS.filter(s => manager.getRecord(s.id).status !== 'มา');
   const sorted     = [...presentSorted, ...nonPresent];
 
+  // [PERFORMANCE FIX] pre-compute order Map ก่อนวน loop
+  // เดิม: presentSorted.findIndex() ภายใน forEach = O(n²) สำหรับ 40 นักเรียน
+  // ใหม่: Map<id, order> สร้างครั้งเดียว = O(n) total
+  const orderMap = new Map(presentSorted.map((s, i) => [s.id, i + 1]));
+
   sorted.forEach((s, idx) => {
     const rec   = manager.getRecord(s.id);
     const col   = idx % COLS;
@@ -268,9 +278,7 @@ function buildCanvas(manager) {
     const cx    = GRID_X + col * CELL_W;
     const cy    = y + row * CELL_H;
     const color = STATUS_COLORS[rec.status] || '#94A3B8';
-    // [REFACTOR] ใช้ STATUS_BG จาก config แทน BG object ที่ประกาศซ้ำ
     const bg    = STATUS_BG[rec.status] || '#f1f5f9';
-    // [REFACTOR] ใช้ STATUS_LABELS จาก config แทน LABEL object ที่ประกาศซ้ำ
     const label = STATUS_LABELS[rec.status] || '?';
 
     ctx.fillStyle   = bg;
@@ -286,7 +294,7 @@ function buildCanvas(manager) {
     drawFigure(ctx, cx + CELL_W / 2, cy + 46, 20, color);
 
     if (rec.status === 'มา') {
-      const order = presentSorted.findIndex(p => p.id === s.id) + 1;
+      const order = orderMap.get(s.id) ?? 0; // O(1) lookup
       ctx.beginPath();
       ctx.arc(cx + CELL_W - 18, cy + 18, 11, 0, Math.PI * 2);
       ctx.fillStyle = color;
@@ -330,7 +338,6 @@ function buildCanvas(manager) {
 }
 
 // ─── Draw simple student figure ───
-// [REFACTOR] ใช้ shadeColor จาก config แทน shadeHex (ชื่อเดิมใน file นี้) ที่เป็น duplicate
 function drawFigure(ctx, cx, cy, r, color) {
   const dark = shadeColor(color, -30);
 

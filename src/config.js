@@ -16,8 +16,7 @@ export const STATUS_COLORS = {
   'ไม่ได้เช็ค': '#94A3B8',
 };
 
-// สี background ของแต่ละสถานะ (ใช้ร่วมกันระหว่าง screenshot.js และ style.css variables)
-// [REFACTOR] รวมค่าไว้ที่นี่แห่งเดียว — เดิมกระจายอยู่ใน screenshot.js (BG object)
+// สี background ของแต่ละสถานะ
 export const STATUS_BG = {
   'มา':         '#e8fdf1',
   'ลา':         '#fff8e6',
@@ -26,7 +25,6 @@ export const STATUS_BG = {
 };
 
 // label สั้นสำหรับแสดงผล
-// [REFACTOR] รวมไว้ที่นี่แห่งเดียว — เดิมซ้ำกันใน ui.js (STATUS_LABELS) และ screenshot.js (LABEL)
 export const STATUS_LABELS = {
   'มา':         'มา',
   'ลา':         'ลา',
@@ -35,7 +33,6 @@ export const STATUS_LABELS = {
 };
 
 // ชื่อวันภาษาไทย
-// [REFACTOR] รวมไว้ที่นี่แห่งเดียว — เดิมซ้ำกันใน ui.js และ screenshot.js
 export const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
 // คำแซว/ชื่อเล่น อันดับ 1-3
@@ -45,10 +42,17 @@ export const RANK_PHRASES = [
   '{name} 🥉',
 ];
 
-// ─── Shade utility (ใช้ร่วมกันระหว่าง icons.js และ screenshot.js) ───
-// [REFACTOR] รวมเป็นฟังก์ชันเดียว — เดิมซ้ำกัน: shadeColor (icons.js) และ shadeHex (screenshot.js)
+// ─── Shade utility ───────────────────────────────────────────
+// [BUG FIX] เพิ่ม validation hex format ก่อน parseInt
+// เดิม: ถ้า hex เป็น undefined หรือรูปแบบผิด → parseInt คืน NaN
+//        → สีที่ได้เป็น '#NaNNaNNaN' → Canvas ไม่วาดสี silently
 export function shadeColor(hex, pct) {
-  const n = parseInt(hex.replace('#', ''), 16);
+  const clean = (hex || '').replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) {
+    console.warn(`[shadeColor] Invalid hex: "${hex}", using fallback`);
+    return hex || '#94A3B8';
+  }
+  const n = parseInt(clean, 16);
   const r = Math.max(0, Math.min(255, (n >> 16) + pct));
   const g = Math.max(0, Math.min(255, ((n >> 8) & 0x00ff) + pct));
   const b = Math.max(0, Math.min(255, (n & 0x0000ff) + pct));

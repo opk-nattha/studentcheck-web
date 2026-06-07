@@ -2,6 +2,11 @@
 //  sw.js — Service Worker (PWA)
 //  ⚠️  ต้องอยู่ที่ root เสมอ (scope = "/")
 //      ย้ายเข้า subfolder จะทำให้ควบคุม index.html ไม่ได้
+//
+//  ⚠️  เมื่อ deploy เวอร์ชันใหม่: ต้องเปลี่ยน CACHE_NAME
+//      เช่น studentcheck-v3, studentcheck-v4, ...
+//      เพื่อให้ activate handler ลบ cache เก่าและ client
+//      ได้รับไฟล์ใหม่แทนที่จะ serve จาก stale cache
 // ============================================================
 
 const CACHE_NAME = 'studentcheck-v2';
@@ -42,7 +47,14 @@ const ASSETS_TO_CACHE = [
 // ── Install: cache ไฟล์ทั้งหมด ─────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS_TO_CACHE))
+      .catch(err => {
+        // [FIX] log error แทนที่จะ silent fail
+        // ถ้า addAll ล้มเหลว (เช่น ไฟล์ไม่มี) Service Worker จะไม่ install
+        console.error('[SW] Install failed:', err);
+        throw err;
+      })
   );
   self.skipWaiting();
 });
@@ -59,11 +71,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ── Fetch: ปรับปรุงกลยุทธ์ cache ──────────────────────────
-// BUG FIX 1: index.html ใช้ Network-First เพื่อให้ได้เวอร์ชันใหม่เสมอ
-//            เดิม cache-first ทำให้ผู้ใช้ได้แอปเวอร์ชันเก่าค้างตลอด
-// BUG FIX 2: cache CORS response (Google Fonts) ด้วย
-//            เดิม `response.type === 'basic'` ทำให้ฟอนต์ไม่ถูก cache → offline ไม่ได้ฟอนต์
+// ── Fetch: Network-First สำหรับ HTML, Cache-First สำหรับไฟล์อื่น ──
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -83,7 +91,7 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => caches.match(event.request)) // ถ้า offline ใช้ cache
+        .catch(() => caches.match(event.request)) // offline fallback
     );
     return;
   }

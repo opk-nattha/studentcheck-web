@@ -5,11 +5,22 @@
 //          Student Grid (responsive cards)
 // ============================================================
 
-// [REFACTOR] import THAI_DAYS และ STATUS_LABELS จาก config แทนการประกาศซ้ำ
 import { STUDENTS, CLASS_INFO, THAI_DAYS, STATUS_LABELS } from './config.js';
 import { createStudentSVG } from './icons.js';
 
 let _manager = null;
+
+// ─── HTML Escape utility ─────────────────────────────────────
+// [SECURITY FIX] ใช้สำหรับ realName ที่ถูก inject ใน innerHTML template
+// ป้องกัน XSS ในกรณีที่ realName มี HTML tags (เช่น <img onerror=...>)
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // ─── Init ───
 export function initUI(manager) {
@@ -34,6 +45,7 @@ export function updateUI(changedId) {
 function buildHeader() {
   const header = document.getElementById('app-header');
   const total  = STUDENTS.length;
+  // CLASS_INFO ค่าต่างๆ เป็น developer-controlled constant → ไม่ต้อง escape
   header.innerHTML = `
     <img src="assets/icons/icon.svg" alt="Logo" class="header-logo">
     <div class="header-datetime">
@@ -94,10 +106,8 @@ function buildStudentGrid() {
     flashCard(card);
   });
 
-  // Delegate: note input
-  // [PERFORMANCE FIX] เพิ่ม debounce 250ms
-  // เดิม setReason() + _notify() + updateUI() ยิงทุก keystroke → DOM query 40+ ครั้งต่อตัวอักษร
-  // ใหม่: รอ 250ms หลังหยุดพิมพ์แล้วค่อย update
+  // Delegate: note input — debounce 250ms
+  // [PERFORMANCE] รอ 250ms หลังหยุดพิมพ์แล้วค่อย update
   let _noteTimer = null;
   grid.addEventListener('input', e => {
     const input = e.target.closest('.card-note');
@@ -115,9 +125,9 @@ function buildStudentGrid() {
 }
 
 function buildCardHTML(s) {
-  // [NOTE] displayName มาจาก config.js (developer-controlled ไม่ใช่ user input)
-  // s.id เป็น numeric string '01'-'40' เสมอ → ปลอดภัยสำหรับ innerHTML
-  const displayName = s.realName ? s.realName : `เลขที่ ${s.id}`;
+  // [SECURITY FIX] ใช้ escapeHTML() สำหรับ realName ใน innerHTML template
+  // s.id เป็น numeric string '01'-'40' เสมอ → ปลอดภัยไม่ต้อง escape
+  const displayName = s.realName ? escapeHTML(s.realName) : `เลขที่ ${s.id}`;
   return `
     <div class="student-card s-unchecked" data-student-id="${s.id}" id="card-${s.id}">
       <div class="card-inner">
@@ -156,28 +166,54 @@ function updateCountPills() {
   document.getElementById('cnt-unchecked').textContent = counts['ไม่ได้เช็ค'] || 0;
 }
 
+// [SECURITY FIX] เปลี่ยน updateTop3() จาก innerHTML เป็น DOM API
+// เดิม: name จาก s.realName ถูก inject ลง innerHTML โดยตรง → XSS ถ้า realName มี HTML tag
+// ใหม่: ใช้ textContent ทุกที่ → HTML จาก realName ถูก render เป็น text ไม่ใช่ markup
 function updateTop3() {
   const presentSorted = _manager.getSortedPresent();
-  const medals        = ['🥇','🥈','🥉'];
+  const medals = ['🥇', '🥈', '🥉'];
+
   for (let i = 0; i < 3; i++) {
     const el = document.getElementById(`rank-${i + 1}`);
     if (!el) continue;
+
+    // ล้าง content เดิม
+    el.textContent = '';
+
+    const badge = document.createElement('span');
+    badge.className = 'rank-badge';
+    badge.textContent = medals[i];
+    el.appendChild(badge);
+
     if (i < presentSorted.length) {
       const s    = presentSorted[i];
       const name = s.realName || `เลขที่ ${s.id}`;
-      const mvp  = i === 0 ? `<span class="rank-tag">MVP</span>` : '';
-      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
-        <span class="rank-name">${name}</span>${mvp}`;
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'rank-name';
+      nameEl.textContent = name; // ← safe: textContent ไม่ parse HTML
+
+      el.appendChild(nameEl);
+
+      if (i === 0) {
+        const mvp = document.createElement('span');
+        mvp.className = 'rank-tag';
+        mvp.textContent = 'MVP';
+        el.appendChild(mvp);
+      }
+
       el.classList.add('filled');
     } else {
-      el.innerHTML = `<span class="rank-badge">${medals[i]}</span>
-        <span class="rank-name top3-empty">รอผู้ท้าชิง</span>`;
+      const nameEl = document.createElement('span');
+      nameEl.className = 'rank-name top3-empty';
+      nameEl.textContent = 'รอผู้ท้าชิง';
+      el.appendChild(nameEl);
       el.classList.remove('filled');
     }
   }
 }
 
-// ─── PERFORMANCE FIX: อัปเดตเฉพาะ card ที่เปลี่ยน + badge ทั้งหมด ───
+// ─── PERFORMANCE: อัปเดตเฉพาะ card ที่เปลี่ยน ───
 function updateAllCards(changedId) {
   const presentList = _manager.getSortedPresent();
   const ordersMap   = {};
@@ -186,8 +222,6 @@ function updateAllCards(changedId) {
   if (changedId) {
     const s = STUDENTS.find(st => st.id === changedId);
     if (s) _updateCard(s, ordersMap);
-    // [PERFORMANCE FIX] อัปเดต badge เฉพาะนักเรียนที่สถานะเป็น 'มา' แทนการวน loop ทั้ง 40 คน
-    // เหตุผล: badge แสดงเฉพาะคนที่มา ลำดับเลื่อนได้ แต่คนที่ไม่ได้มาไม่มี badge อยู่แล้ว
     STUDENTS.forEach(st => _updateOrderBadge(st.id, ordersMap));
   } else {
     STUDENTS.forEach(s => _updateCard(s, ordersMap));
@@ -250,7 +284,6 @@ function flashCard(card) {
 }
 
 // ─── Clock ───
-// [REFACTOR] ใช้ THAI_DAYS จาก config.js แทนการประกาศซ้ำ
 function startClock() {
   function tick() {
     const now = new Date();
@@ -269,7 +302,7 @@ function startClock() {
   }
 
   tick();
-  const now  = new Date();
+  const now = new Date();
   const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
   setTimeout(() => {
     tick();

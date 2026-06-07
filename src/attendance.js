@@ -3,10 +3,10 @@
 //  Port มาจาก AttendanceManager.cs + ButtonCheck.cs
 // ============================================================
 
-// [BUG FIX] เพิ่ม RANK_PHRASES เข้า import
-// เดิม import เฉพาะ STUDENTS ทำให้ getTopN() ที่ใช้ RANK_PHRASES
-// throw ReferenceError: RANK_PHRASES is not defined ทันทีที่ถูกเรียก
 import { STUDENTS, RANK_PHRASES } from './config.js';
+
+// [VALIDATION] ค่าสถานะที่ถูกต้อง — ป้องกัน arbitrary string เข้ามาใน records
+const VALID_STATUSES = new Set(['มา', 'ขาด', 'ลา', 'ไม่ได้เช็ค']);
 
 export class AttendanceManager {
   constructor() {
@@ -19,7 +19,7 @@ export class AttendanceManager {
       this.records[s.id] = {
         status: 'ไม่ได้เช็ค',
         reason: '',
-        time: null,   // DateTime.MaxValue equivalent = null (late)
+        time: null,
         studentRef: s,
       };
     });
@@ -27,6 +27,13 @@ export class AttendanceManager {
 
   // ===== ตั้งสถานะ (จาก ButtonCheck.SetStatus) =====
   setStatus(id, status) {
+    // [BUG FIX] ตรวจสอบว่า status เป็นค่าที่ถูกต้อง
+    // เดิม: รับ string ใดก็ได้ → UI แตกเมื่อ statusClass ไม่ตรงกับ CSS class
+    if (!VALID_STATUSES.has(status)) {
+      console.warn(`[AttendanceManager] Invalid status: "${status}"`);
+      return;
+    }
+
     const rec = this.records[id];
     if (!rec) return;
 
@@ -40,7 +47,9 @@ export class AttendanceManager {
   setReason(id, reason) {
     const rec = this.records[id];
     if (!rec) return;
-    rec.reason = reason;
+
+    // [VALIDATION] จำกัดความยาว reason ให้สอดคล้องกับ maxlength="40" ใน HTML
+    rec.reason = String(reason).slice(0, 40);
     this._notify(id);
   }
 
@@ -56,7 +65,7 @@ export class AttendanceManager {
     return counts;
   }
 
-  // ===== นักเรียนที่มา เรียงตาม lastActionTime ก่อน (UpdateAllScreens logic) =====
+  // ===== นักเรียนที่มา เรียงตาม lastActionTime ก่อน =====
   getSortedPresent() {
     return STUDENTS
       .filter(s => this.records[s.id].status === 'มา')
@@ -72,9 +81,7 @@ export class AttendanceManager {
     return STUDENTS.filter(s => this.records[s.id].status !== 'มา');
   }
 
-  // ===== Top N (ตัดเป็น 3 จาก 6 ตาม spec) =====
-  // [BUG FIX] ก่อนหน้า RANK_PHRASES ไม่ได้ import → ReferenceError
-  // ตอนนี้ import ถูกต้องแล้วด้านบน
+  // ===== Top N (ตัดเป็น 3 ตาม spec) =====
   getTopN(n = 3) {
     const present = this.getSortedPresent();
     return present.slice(0, n).map((s, i) => {
@@ -84,7 +91,7 @@ export class AttendanceManager {
     });
   }
 
-  // ===== getReasonText (จาก ButtonCheck.GetReasonText + อัปเดตข้อความ) =====
+  // ===== getReasonText =====
   getDisplayText(id) {
     const rec = this.records[id];
     if (!rec || rec.status === 'ไม่ได้เช็ค') return '';
@@ -112,6 +119,7 @@ export class AttendanceManager {
   }
 
   _notify(id) {
-    this.listeners.forEach(fn => fn(id));
+    // สำเนา listeners ก่อน iterate เพื่อป้องกัน re-entrant mutation
+    [...this.listeners].forEach(fn => fn(id));
   }
 }
