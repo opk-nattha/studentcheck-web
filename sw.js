@@ -4,7 +4,7 @@
 //      ย้ายเข้า subfolder จะทำให้ควบคุม index.html ไม่ได้
 // ============================================================
 
-const CACHE_NAME = 'studentcheck-v1';
+const CACHE_NAME = 'studentcheck-v2';
 
 // ── ไฟล์ที่ cache ไว้ใช้งาน offline ──────────────────────────
 const ASSETS_TO_CACHE = [
@@ -59,17 +59,44 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ── Fetch: cache-first ──────────────────────────────────────
+// ── Fetch: ปรับปรุงกลยุทธ์ cache ──────────────────────────
+// BUG FIX 1: index.html ใช้ Network-First เพื่อให้ได้เวอร์ชันใหม่เสมอ
+//            เดิม cache-first ทำให้ผู้ใช้ได้แอปเวอร์ชันเก่าค้างตลอด
+// BUG FIX 2: cache CORS response (Google Fonts) ด้วย
+//            เดิม `response.type === 'basic'` ทำให้ฟอนต์ไม่ถูก cache → offline ไม่ได้ฟอนต์
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (!url.protocol.startsWith('http')) return;
 
+  // Network-First สำหรับ HTML (index.html / root)
+  const isHTML = url.pathname === '/' ||
+                 url.pathname.endsWith('/index.html') ||
+                 url.pathname.endsWith('/');
+
+  if (isHTML) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response?.status === 200) {
+            caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request)) // ถ้า offline ใช้ cache
+    );
+    return;
+  }
+
+  // Cache-First สำหรับไฟล์อื่น (JS, CSS, images, fonts)
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
+
       return fetch(event.request).then(response => {
-        if (response?.status === 200 && response.type === 'basic') {
+        // cache ทั้ง same-origin ('basic') และ cross-origin ('cors') เช่น Google Fonts
+        if (response?.status === 200 &&
+            (response.type === 'basic' || response.type === 'cors')) {
           caches.open(CACHE_NAME).then(c => c.put(event.request, response.clone()));
         }
         return response;
