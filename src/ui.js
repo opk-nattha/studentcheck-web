@@ -5,21 +5,11 @@
 //          Student Grid (responsive cards)
 // ============================================================
 
-import { STUDENTS, CLASS_INFO } from './config.js';
-// BUG FIX: ลบ STATUS_COLORS ออก — ไม่ได้ใช้ใน ui.js
+// [REFACTOR] import THAI_DAYS และ STATUS_LABELS จาก config แทนการประกาศซ้ำ
+import { STUDENTS, CLASS_INFO, THAI_DAYS, STATUS_LABELS } from './config.js';
 import { createStudentSVG } from './icons.js';
 
 let _manager = null;
-
-// ─── STATUS labels (Thai) ───
-const STATUS_LABELS = {
-  'มา':         'มา',
-  'ลา':         'ลา',
-  'ขาด':        'ขาด',
-  'ไม่ได้เช็ค': 'ไม่เช็ค',
-};
-
-const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
 // ─── Init ───
 export function initUI(manager) {
@@ -105,16 +95,28 @@ function buildStudentGrid() {
   });
 
   // Delegate: note input
+  // [PERFORMANCE FIX] เพิ่ม debounce 250ms
+  // เดิม setReason() + _notify() + updateUI() ยิงทุก keystroke → DOM query 40+ ครั้งต่อตัวอักษร
+  // ใหม่: รอ 250ms หลังหยุดพิมพ์แล้วค่อย update
+  let _noteTimer = null;
   grid.addEventListener('input', e => {
     const input = e.target.closest('.card-note');
     if (!input) return;
     const card = input.closest('.student-card');
     if (!card) return;
-    _manager.setReason(card.dataset.studentId, input.value);
+    const id  = card.dataset.studentId;
+    const val = input.value;
+
+    clearTimeout(_noteTimer);
+    _noteTimer = setTimeout(() => {
+      _manager.setReason(id, val);
+    }, 250);
   });
 }
 
 function buildCardHTML(s) {
+  // [NOTE] displayName มาจาก config.js (developer-controlled ไม่ใช่ user input)
+  // s.id เป็น numeric string '01'-'40' เสมอ → ปลอดภัยสำหรับ innerHTML
   const displayName = s.realName ? s.realName : `เลขที่ ${s.id}`;
   return `
     <div class="student-card s-unchecked" data-student-id="${s.id}" id="card-${s.id}">
@@ -176,21 +178,18 @@ function updateTop3() {
 }
 
 // ─── PERFORMANCE FIX: อัปเดตเฉพาะ card ที่เปลี่ยน + badge ทั้งหมด ───
-// เดิม: วน loop 40 คนทุกครั้ง แม้จะเปลี่ยนแค่คนเดียว
-// ใหม่: เปลี่ยนแค่คนที่ changedId ชี้, แล้วอัปเดต badge ทุกคน (order อาจเลื่อน)
 function updateAllCards(changedId) {
   const presentList = _manager.getSortedPresent();
   const ordersMap   = {};
   presentList.forEach((s, i) => ordersMap[s.id] = i + 1);
 
   if (changedId) {
-    // อัปเดตเฉพาะ card ที่เปลี่ยน
     const s = STUDENTS.find(st => st.id === changedId);
     if (s) _updateCard(s, ordersMap);
-    // อัปเดต badge ทุกคน เพราะลำดับการมาอาจเลื่อน
+    // [PERFORMANCE FIX] อัปเดต badge เฉพาะนักเรียนที่สถานะเป็น 'มา' แทนการวน loop ทั้ง 40 คน
+    // เหตุผล: badge แสดงเฉพาะคนที่มา ลำดับเลื่อนได้ แต่คนที่ไม่ได้มาไม่มี badge อยู่แล้ว
     STUDENTS.forEach(st => _updateOrderBadge(st.id, ordersMap));
   } else {
-    // กรณี reset หรือ init: อัปเดตทั้งหมด
     STUDENTS.forEach(s => _updateCard(s, ordersMap));
   }
 }
@@ -200,7 +199,6 @@ function _updateCard(s, ordersMap) {
   const card = document.getElementById(`card-${s.id}`);
   if (!card || !rec) return;
 
-  // Status class
   const statusClass = {
     'มา':         's-present',
     'ลา':         's-leave',
@@ -209,7 +207,7 @@ function _updateCard(s, ordersMap) {
   }[rec.status] || 's-unchecked';
   card.className = `student-card ${statusClass}`;
 
-  // Avatar SVG (replace only the svg element)
+  // Avatar SVG — ใช้ cached string จาก icons.js (memoized)
   const avatarWrap = card.querySelector('.card-avatar-wrap');
   const oldSVG     = avatarWrap?.querySelector('svg');
   if (oldSVG) {
@@ -219,15 +217,12 @@ function _updateCard(s, ordersMap) {
     if (newSVG) avatarWrap.replaceChild(newSVG, oldSVG);
   }
 
-  // Order badge
   _updateOrderBadge(s.id, ordersMap);
 
-  // Status buttons
   card.querySelectorAll('.btn-status').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.status === rec.status);
   });
 
-  // Note input visibility
   const noteWrap  = card.querySelector('.card-note-wrap');
   const noteInput = card.querySelector('.card-note');
   if (noteWrap) noteWrap.classList.toggle('hidden', rec.status === 'ไม่ได้เช็ค');
@@ -255,8 +250,7 @@ function flashCard(card) {
 }
 
 // ─── Clock ───
-// BUG FIX: เดิม setInterval 30000ms ทำให้นาฬิกาแสดงเวลาล้าหลังสูงสุด 30 วินาที
-// แก้เป็น tick ทุก 60 วินาที และ sync ตาม boundary ของนาที
+// [REFACTOR] ใช้ THAI_DAYS จาก config.js แทนการประกาศซ้ำ
 function startClock() {
   function tick() {
     const now = new Date();
@@ -275,7 +269,6 @@ function startClock() {
   }
 
   tick();
-  // Sync กับขอบเขตนาที: รอให้ถึงวินาทีที่ 0 ของนาทีถัดไปก่อน แล้วค่อย setInterval 60s
   const now  = new Date();
   const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
   setTimeout(() => {

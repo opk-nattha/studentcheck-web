@@ -3,22 +3,12 @@
 //  ไม่พึ่ง html2canvas → ไม่มีปัญหา blank/white output
 // ============================================================
 
-import { STUDENTS, CLASS_INFO, STATUS_COLORS } from './config.js';
-
-const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-
-const LABEL = {
-  'มา':         'มา',
-  'ลา':         'ลา',
-  'ขาด':        'ขาด',
-  'ไม่ได้เช็ค': 'ไม่เช็ค',
-};
-const BG = {
-  'มา':         '#e8fdf1',
-  'ลา':         '#fff8e6',
-  'ขาด':        '#fff0f0',
-  'ไม่ได้เช็ค': '#f1f5f9',
-};
+// [REFACTOR] import shared constants จาก config แทนการประกาศซ้ำ
+// - shadeColor   (เดิมชื่อ shadeHex ใน file นี้ — ลบ duplicate)
+// - THAI_DAYS    (เดิมประกาศซ้ำใน ui.js และ screenshot.js)
+// - STATUS_LABELS (เดิมชื่อ LABEL ใน file นี้)
+// - STATUS_BG    (เดิมชื่อ BG ใน file นี้)
+import { STUDENTS, CLASS_INFO, STATUS_COLORS, STATUS_BG, STATUS_LABELS, THAI_DAYS, shadeColor } from './config.js';
 
 // iOS detection — คำนวณครั้งเดียวระดับ module
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -48,45 +38,53 @@ export async function captureAndDownload(manager) {
     const y   = now.getFullYear();
     const filename = `เช็คชื่อเข้าแถววันที่_${dd}_${mo}_${y}.png`;
 
-    // BUG FIX: canvas.toBlob() อาจ return null ถ้า canvas ถูก taint หรือ memory เต็ม
+    // [BUG FIX] ครอบ toBlob callback ด้วย try/catch
+    // เดิม: error ภายใน callback ไม่ถูก catch → silent failure
     canvas.toBlob(async blob => {
-      if (!blob) {
-        showToast('❌ สร้างภาพไม่สำเร็จ (canvas error)');
-        return;
-      }
-      if (isIOS) {
-        // iOS: ลอง Web Share API ก่อน (iOS 15+)
-        if (navigator.share && navigator.canShare) {
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({ files: [file], title: 'Student Check' });
-              showToast('✅ แชร์เรียบร้อย!');
-              return;
-            } catch (shareErr) {
-              if (shareErr.name === 'AbortError') {
-                showToast('ยกเลิกการแชร์');
+      try {
+        if (!blob) {
+          showToast('❌ สร้างภาพไม่สำเร็จ (canvas error)');
+          return;
+        }
+        if (isIOS) {
+          if (navigator.share && navigator.canShare) {
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              try {
+                await navigator.share({ files: [file], title: 'Student Check' });
+                showToast('✅ แชร์เรียบร้อย!');
                 return;
+              } catch (shareErr) {
+                if (shareErr.name === 'AbortError') {
+                  showToast('ยกเลิกการแชร์');
+                  return;
+                }
+                // ถ้า share ล้มเหลวด้วยสาเหตุอื่น → fallback ด้านล่าง
               }
             }
           }
+          // Fallback iOS: เปิด blob ใน tab ใหม่ให้กดค้างบันทึก
+          // [NOTE] revokeObjectURL หลัง 120s (เพิ่มจาก 60s)
+          // เผื่อผู้ใช้ใช้เวลานาวิเกทไปยัง tab ใหม่และกดค้าง
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          showToast('📸 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"');
+          setTimeout(() => URL.revokeObjectURL(url), 120_000);
+        } else {
+          // Android / Desktop: download ปกติ
+          const url = URL.createObjectURL(blob);
+          const a   = document.createElement('a');
+          a.href     = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('✅ บันทึกเรียบร้อย!');
         }
-        // Fallback: เปิด blob ใน tab ใหม่ ให้กดค้างบันทึก
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        showToast('📸 กดค้างที่รูปแล้วเลือก "บันทึกรูปภาพ"');
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-      } else {
-        // Android / Desktop: download ปกติ
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href     = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('✅ บันทึกเรียบร้อย!');
+      } catch (innerErr) {
+        console.error('Capture inner error:', innerErr);
+        showToast('❌ บันทึกไม่สำเร็จ');
       }
     }, 'image/png');
   } catch (err) {
@@ -96,9 +94,6 @@ export async function captureAndDownload(manager) {
 }
 
 // ─── Helpers: วาดข้อความ (แก้บั๊ก iPad) ─────────────────────────────────────
-// ctx.textAlign = 'center' | 'right' ทำงานผิดปกติบน iPad Safari กับฟอนต์ไทย
-// วิธีแก้: ใช้ textAlign='left' ตลอด แล้วชดเชย x ด้วย measureText() เอง
-
 function fillTextCenter(ctx, text, x, y) {
   ctx.textAlign = 'left';
   ctx.fillText(text, x - ctx.measureText(text).width / 2, y);
@@ -108,7 +103,6 @@ function fillTextRight(ctx, text, x, y) {
   ctx.textAlign = 'left';
   ctx.fillText(text, x - ctx.measureText(text).width, y);
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 function buildCanvas(manager) {
   const COLS     = 8;
@@ -135,7 +129,6 @@ function buildCanvas(manager) {
   const ctx      = canvas.getContext('2d');
   ctx.scale(SCALE, SCALE);
 
-  // default state ที่ชัดเจน — ไม่ให้เหลือค่า center ค้างจากที่อื่น
   ctx.textAlign    = 'left';
   ctx.textBaseline = 'alphabetic';
 
@@ -169,7 +162,6 @@ function buildCanvas(manager) {
   const dateStr = `${dd}/${mo}/${yr}`;
   const dayStr  = `วัน${THAI_DAYS[now.getDay()]}  ${hh}:${mm} น.`;
 
-  // ด้านขวา: ใช้ fillTextRight แทน textAlign='right' (แก้บั๊ก iPad เบี้ยวขวา)
   ctx.fillStyle = '#1e293b';
   ctx.font      = 'bold 28px Prompt, Sarabun, sans-serif';
   fillTextRight(ctx, dateStr, W - PAD, y + H_HDR / 2 - 12);
@@ -195,12 +187,10 @@ function buildCanvas(manager) {
       ctx.fillRect((i + 1) * segW - 1, y, 1, H_COUNTS);
     }
     const cx = i * segW + segW / 2;
-    // ตัวเลข
     ctx.fillStyle    = item.color;
     ctx.font         = `bold 42px Prompt, Sarabun, sans-serif`;
     ctx.textBaseline = 'middle';
     fillTextCenter(ctx, String(item.val), cx, y + H_COUNTS / 2 - 10);
-    // label
     ctx.fillStyle = item.lc;
     ctx.font      = `16px Prompt, Sarabun, sans-serif`;
     fillTextCenter(ctx, item.label, cx, y + H_COUNTS / 2 + 22);
@@ -278,25 +268,23 @@ function buildCanvas(manager) {
     const cx    = GRID_X + col * CELL_W;
     const cy    = y + row * CELL_H;
     const color = STATUS_COLORS[rec.status] || '#94A3B8';
-    const bg    = BG[rec.status] || '#f1f5f9';
-    const label = LABEL[rec.status] || '?';
+    // [REFACTOR] ใช้ STATUS_BG จาก config แทน BG object ที่ประกาศซ้ำ
+    const bg    = STATUS_BG[rec.status] || '#f1f5f9';
+    // [REFACTOR] ใช้ STATUS_LABELS จาก config แทน LABEL object ที่ประกาศซ้ำ
+    const label = STATUS_LABELS[rec.status] || '?';
 
-    // Cell background
     ctx.fillStyle   = bg;
     ctx.strokeStyle = color + '80';
     ctx.lineWidth   = 1;
     roundRect(ctx, cx + 4, cy + 4, CELL_W - 8, CELL_H - 8, 10);
     ctx.fill(); ctx.stroke();
 
-    // Top color bar
     ctx.fillStyle = color;
     roundRect(ctx, cx + 4, cy + 4, CELL_W - 8, 6, [6, 6, 0, 0]);
     ctx.fill();
 
-    // Draw student figure
     drawFigure(ctx, cx + CELL_W / 2, cy + 46, 20, color);
 
-    // Arrival order badge
     if (rec.status === 'มา') {
       const order = presentSorted.findIndex(p => p.id === s.id) + 1;
       ctx.beginPath();
@@ -306,29 +294,21 @@ function buildCanvas(manager) {
       ctx.fillStyle    = 'white';
       ctx.font         = 'bold 11px sans-serif';
       ctx.textBaseline = 'middle';
-      // badge อยู่ตำแหน่งที่แน่นอน ไม่ต้องกึ่งกลาง — ใช้ fillTextCenter ให้ตรง
       fillTextCenter(ctx, String(order), cx + CELL_W - 18, cy + 18);
       ctx.textBaseline = 'alphabetic';
     }
 
-    // ── ข้อความในการ์ด: ใช้ fillTextCenter ทั้งหมด ──
-    // แก้บั๊ก iPad: textAlign='center' ทำให้ข้อความเบี่ยงขวา
-    // fillTextCenter วัด measureText() แล้วชดเชย x เอง → กึ่งกลางถูกต้องทุกแพล็ตฟอร์ม
-
     const midX = cx + CELL_W / 2;
 
-    // เลขที่
     ctx.fillStyle    = '#64748b';
     ctx.font         = `bold 11px Prompt, Sarabun, sans-serif`;
     ctx.textBaseline = 'middle';
     fillTextCenter(ctx, `เลขที่ ${s.id}`, midX, cy + 104);
 
-    // สถานะ
     ctx.fillStyle = color;
     ctx.font      = `bold 11px Prompt, Sarabun, sans-serif`;
     fillTextCenter(ctx, label, midX, cy + 116);
 
-    // หมายเหตุ
     if (rec.reason) {
       ctx.fillStyle = '#94A3B8';
       ctx.font      = `10px Prompt, Sarabun, sans-serif`;
@@ -350,8 +330,9 @@ function buildCanvas(manager) {
 }
 
 // ─── Draw simple student figure ───
+// [REFACTOR] ใช้ shadeColor จาก config แทน shadeHex (ชื่อเดิมใน file นี้) ที่เป็น duplicate
 function drawFigure(ctx, cx, cy, r, color) {
-  const dark = shadeHex(color, -30);
+  const dark = shadeColor(color, -30);
 
   ctx.beginPath();
   ctx.moveTo(cx - r * 0.75, cy + r * 2.4);
@@ -399,14 +380,6 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + radii[0]);
   ctx.quadraticCurveTo(x, y, x + radii[0], y);
   ctx.closePath();
-}
-
-function shadeHex(hex, pct) {
-  const n = parseInt(hex.replace('#',''), 16);
-  const r = Math.max(0, Math.min(255, (n >> 16) + pct));
-  const g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + pct));
-  const b = Math.max(0, Math.min(255, (n & 0xff) + pct));
-  return '#' + ((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
 }
 
 function clip(ctx, text, maxPx) {

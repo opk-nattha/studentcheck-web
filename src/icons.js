@@ -4,36 +4,27 @@
 //  ฟังก์ชันนี้ generate inline SVG ที่ปรับสีตามสถานะ
 // ============================================================
 
-import { STATUS_COLORS } from './config.js';
+// [REFACTOR] ใช้ shadeColor จาก config.js แทนการ duplicate ฟังก์ชัน
+import { STATUS_COLORS, shadeColor } from './config.js';
 
-/**
- * Vector paths นักเรียน — ดึงจาก assets/vectors/student-*.svg
- * สไตล์: simple iconic character (head + body + collar)
- * viewBox: 0 0 40 52
- */
-
-// ─── shade utility (ตาม indexU shadeColor) ───
-function shadeColor(hex, pct) {
-  const num = parseInt(hex.replace('#', ''), 16);
-  const r = Math.max(0, Math.min(255, (num >> 16) + pct));
-  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + pct));
-  const b = Math.max(0, Math.min(255, (num & 0x0000ff) + pct));
-  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
-}
+// ─── Memoize SVG ตามสถานะ ───
+// [PERFORMANCE FIX] เดิมสร้าง SVG string ใหม่ทุกครั้งที่เรียก
+// แต่ค่าที่เป็นไปได้มีแค่ 4 สถานะ → cache ครั้งแรก แล้วคืนค่าเดิม
+// ประหยัด string interpolation + DOM parse สำหรับ 40 cards × ทุก update
+const _svgCache = {};
 
 /**
  * สร้าง inline SVG นักเรียน
- * Vector base อ้างอิงจาก assets/vectors/student-unchecked.svg (รูปทรง)
- * สีปรับตามสถานะผ่าน STATUS_COLORS
- *
  * @param {string} status - 'มา' | 'ลา' | 'ขาด' | 'ไม่ได้เช็ค'
  * @returns {string} SVG HTML string
  */
 export function createStudentSVG(status = 'ไม่ได้เช็ค') {
-  const color = STATUS_COLORS[status] || STATUS_COLORS['ไม่ได้เช็ค'];
-  const dark  = shadeColor(color, -30);  // สีผมเข้มกว่าตัว
+  if (_svgCache[status]) return _svgCache[status];   // cache hit
 
-  return `<svg viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
+  const color = STATUS_COLORS[status] || STATUS_COLORS['ไม่ได้เช็ค'];
+  const dark  = shadeColor(color, -30);
+
+  const svg = `<svg viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
   <!-- Head -->
   <circle cx="20" cy="14" r="12" fill="${color}"/>
   <!-- Hair -->
@@ -48,4 +39,7 @@ export function createStudentSVG(status = 'ไม่ได้เช็ค') {
   <!-- Collar -->
   <path d="M17 25 L20 29.5 L23 25" fill="rgba(255,255,255,0.28)"/>
 </svg>`;
+
+  _svgCache[status] = svg;
+  return svg;
 }

@@ -3,8 +3,10 @@
 //  Port มาจาก AttendanceManager.cs + ButtonCheck.cs
 // ============================================================
 
-// BUG FIX: ลบ STATUS_COLORS, RANK_PHRASES ออก — import มาแต่ไม่เคยใช้ใน file นี้
-import { STUDENTS } from './config.js';
+// [BUG FIX] เพิ่ม RANK_PHRASES เข้า import
+// เดิม import เฉพาะ STUDENTS ทำให้ getTopN() ที่ใช้ RANK_PHRASES
+// throw ReferenceError: RANK_PHRASES is not defined ทันทีที่ถูกเรียก
+import { STUDENTS, RANK_PHRASES } from './config.js';
 
 export class AttendanceManager {
   constructor() {
@@ -71,11 +73,13 @@ export class AttendanceManager {
   }
 
   // ===== Top N (ตัดเป็น 3 จาก 6 ตาม spec) =====
+  // [BUG FIX] ก่อนหน้า RANK_PHRASES ไม่ได้ import → ReferenceError
+  // ตอนนี้ import ถูกต้องแล้วด้านบน
   getTopN(n = 3) {
     const present = this.getSortedPresent();
     return present.slice(0, n).map((s, i) => {
       const displayName = s.realName || `เลขที่ ${s.id}`;
-      const phrase = RANK_PHRASES[i] || `{name}`;
+      const phrase = RANK_PHRASES[i] || '{name}';
       return phrase.replace('{name}', displayName);
     });
   }

@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Check</title>
 
+  <!--
+    [SECURITY FIX] เพิ่ม Content-Security-Policy
+    - script-src 'self'        → อนุญาตเฉพาะ JS จาก origin เดียวกัน (ป้องกัน XSS / script injection)
+    - style-src 'self' + googleapis → อนุญาต Google Fonts stylesheet
+    - font-src 'self' + gstatic → อนุญาต font file จาก Google
+    - img-src 'self' blob: data: → รองรับ PNG download (blob URL) และ data URI
+    - worker-src 'self'        → อนุญาต Service Worker
+    - connect-src 'self'       → ป้องกัน fetch ไปยัง origin อื่น
+  -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com;
+                 img-src 'self' blob: data:;
+                 connect-src 'self';
+                 worker-src 'self'">
+
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
 
@@ -47,8 +65,12 @@
     </main>
   </div>
 
-  <!-- Off-screen capture panel for PNG export -->
-  <div id="capture-panel"></div>
+  <!--
+    [CLEANUP] ลบ <div id="capture-panel"> ออก
+    - ไม่ได้ใช้งานจริง: screenshot.js สร้าง <canvas> ตรงๆ ด้วย document.createElement('canvas')
+    - ไม่เคย populate HTML ลงไปใน #capture-panel เลย
+    - CSS .cp-* ที่เกี่ยวข้องก็ dead code เช่นกัน → ลบออกใน style.css ด้วย
+  -->
 
   <!-- Status toast -->
   <div id="status-toast"></div>

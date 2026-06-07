@@ -22,8 +22,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('#btn-save')) {
       captureAndDownload(manager);
     }
-    // BUG FIX: เปลี่ยนจาก confirm() เป็น custom dialog
-    // confirm() อาจถูก block ใน standalone PWA mode บางเบราว์เซอร์
     if (e.target.closest('#btn-reset')) {
       showConfirmDialog('รีเซ็ตการเช็คชื่อทั้งหมดหรือไม่?', () => {
         manager.reset();
@@ -50,16 +48,33 @@ function showConfirmDialog(message, onConfirm) {
   overlay.className = 'confirm-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.innerHTML = `
-    <div class="confirm-dialog">
-      <p class="confirm-message">${message}</p>
-      <div class="confirm-actions">
-        <button class="confirm-btn-cancel">ยกเลิก</button>
-        <button class="confirm-btn-ok">รีเซ็ต</button>
-      </div>
-    </div>
-  `;
+
+  // [SECURITY FIX] เดิมใช้ innerHTML template literal ซึ่ง inject message โดยตรง
+  // → XSS ถ้า message มาจาก input ของผู้ใช้
+  // แก้โดย: สร้าง DOM element แยกส่วน แล้วใช้ textContent แทน innerHTML สำหรับข้อความ
+  const dialog = document.createElement('div');
+  dialog.className = 'confirm-dialog';
+
+  const msg = document.createElement('p');
+  msg.className = 'confirm-message';
+  msg.textContent = message;        // ← textContent: safe, ไม่ parse HTML
+
+  const actions = document.createElement('div');
+  actions.className = 'confirm-actions';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'confirm-btn-cancel';
+  cancelBtn.textContent = 'ยกเลิก';
+
+  const okBtn = document.createElement('button');
+  okBtn.className = 'confirm-btn-ok';
+  okBtn.textContent = 'รีเซ็ต';
+
+  actions.append(cancelBtn, okBtn);
+  dialog.append(msg, actions);
+  overlay.append(dialog);
   document.body.appendChild(overlay);
+
   requestAnimationFrame(() => overlay.classList.add('confirm-overlay--visible'));
 
   function close() {
@@ -67,14 +82,9 @@ function showConfirmDialog(message, onConfirm) {
     overlay.addEventListener('transitionend', () => overlay.remove(), { once: true });
   }
 
-  overlay.querySelector('.confirm-btn-cancel').addEventListener('click', close);
-  overlay.querySelector('.confirm-btn-ok').addEventListener('click', () => {
-    close();
-    onConfirm();
-  });
-  // กด backdrop เพื่อปิด
+  cancelBtn.addEventListener('click', close);
+  okBtn.addEventListener('click', () => { close(); onConfirm(); });
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-  // กด Escape เพื่อปิด
   const onKey = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey); } };
   document.addEventListener('keydown', onKey);
 }
@@ -102,24 +112,20 @@ function initInstallBanner() {
 
   if (!banner || !installBtn || !dismissBtn) return;
 
-  // ไม่แสดง banner ถ้าผู้ใช้กด dismiss ไปแล้ว
   const DISMISS_KEY = 'pwa-install-dismissed';
   if (sessionStorage.getItem(DISMISS_KEY)) return;
 
-  // ไม่แสดงถ้าเปิดในโหมด standalone (ติดตั้งแล้ว)
   if (window.matchMedia('(display-mode: standalone)').matches) return;
   if (window.navigator.standalone === true) return; // iOS
 
   let deferredPrompt = null;
 
-  // Chrome/Android จะยิง event นี้เมื่อแอปผ่านเงื่อนไข PWA
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();           // ระงับ default mini-infobar
+    e.preventDefault();
     deferredPrompt = e;
     showBanner(banner);
   });
 
-  // กดปุ่ม "ติดตั้ง"
   installBtn.addEventListener('click', async () => {
     hideBanner(banner);
     if (!deferredPrompt) return;
@@ -131,13 +137,11 @@ function initInstallBanner() {
     }
   });
 
-  // กดปุ่ม "✕"
   dismissBtn.addEventListener('click', () => {
     hideBanner(banner);
     sessionStorage.setItem(DISMISS_KEY, '1');
   });
 
-  // ซ่อน banner เมื่อติดตั้งสำเร็จ
   window.addEventListener('appinstalled', () => {
     hideBanner(banner);
     deferredPrompt = null;

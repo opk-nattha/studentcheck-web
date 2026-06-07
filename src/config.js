@@ -16,12 +16,44 @@ export const STATUS_COLORS = {
   'ไม่ได้เช็ค': '#94A3B8',
 };
 
+// สี background ของแต่ละสถานะ (ใช้ร่วมกันระหว่าง screenshot.js และ style.css variables)
+// [REFACTOR] รวมค่าไว้ที่นี่แห่งเดียว — เดิมกระจายอยู่ใน screenshot.js (BG object)
+export const STATUS_BG = {
+  'มา':         '#e8fdf1',
+  'ลา':         '#fff8e6',
+  'ขาด':        '#fff0f0',
+  'ไม่ได้เช็ค': '#f1f5f9',
+};
+
+// label สั้นสำหรับแสดงผล
+// [REFACTOR] รวมไว้ที่นี่แห่งเดียว — เดิมซ้ำกันใน ui.js (STATUS_LABELS) และ screenshot.js (LABEL)
+export const STATUS_LABELS = {
+  'มา':         'มา',
+  'ลา':         'ลา',
+  'ขาด':        'ขาด',
+  'ไม่ได้เช็ค': 'ไม่เช็ค',
+};
+
+// ชื่อวันภาษาไทย
+// [REFACTOR] รวมไว้ที่นี่แห่งเดียว — เดิมซ้ำกันใน ui.js และ screenshot.js
+export const THAI_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
 // คำแซว/ชื่อเล่น อันดับ 1-3
 export const RANK_PHRASES = [
   '{name} 🏆 MVP',
   '{name} 🥈',
   '{name} 🥉',
 ];
+
+// ─── Shade utility (ใช้ร่วมกันระหว่าง icons.js และ screenshot.js) ───
+// [REFACTOR] รวมเป็นฟังก์ชันเดียว — เดิมซ้ำกัน: shadeColor (icons.js) และ shadeHex (screenshot.js)
+export function shadeColor(hex, pct) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, Math.min(255, (n >> 16) + pct));
+  const g = Math.max(0, Math.min(255, ((n >> 8) & 0x00ff) + pct));
+  const b = Math.max(0, Math.min(255, (n & 0x0000ff) + pct));
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
 
 // รายชื่อนักเรียน 40 คน — แก้ realName เพื่อแสดงชื่อจริง
 export const STUDENTS = [

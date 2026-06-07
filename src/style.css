@@ -270,89 +270,9 @@ html, body {
 .card-note:focus        { border-color: var(--c-present); }
 .card-note-wrap.hidden  { display: none; }
 
-/* ─── Capture Panel (off-screen PNG export) ─── */
-#capture-panel {
-  position: fixed; left: -9999px; top: 0;
-  width: 1080px; background: #ffffff;
-  font-family: 'Prompt', sans-serif;
-  z-index: -1;
-}
-.cp-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 28px 40px 20px; border-bottom: 2px solid #e2e8f0;
-  background: #f8fafc;
-}
-.cp-header-left { display: flex; align-items: center; gap: 16px; }
-.cp-logo        { height: 54px; width: auto; }
-.cp-title-block { display: flex; flex-direction: column; }
-.cp-title       { font-size: 22px; font-weight: 700; color: #1e293b; line-height: 1.2; }
-.cp-subtitle    { font-size: 14px; color: #64748b; font-weight: 400; }
-.cp-datetime    { text-align: right; }
-.cp-date-big    { font-size: 24px; font-weight: 700; color: #1e293b; }
-.cp-day         { font-size: 14px; color: #64748b; }
-
-.cp-counts {
-  display: flex; margin: 0 40px;
-  border-radius: 14px; overflow: hidden;
-  border: 1px solid #e2e8f0; margin-top: 20px;
-}
-.cp-count-item {
-  flex: 1; padding: 14px 10px; text-align: center;
-  border-right: 1px solid #e2e8f0;
-}
-.cp-count-item:last-child { border-right: none; }
-.cp-count-num   { font-size: 32px; font-weight: 700; line-height: 1; }
-.cp-count-lbl   { font-size: 13px; font-weight: 500; margin-top: 2px; }
-.cp-count-item.ccp { background: #e8fdf1; }
-.cp-count-item.ccp .cp-count-num { color: #00BF63; }
-.cp-count-item.ccp .cp-count-lbl { color: #00994f; }
-.cp-count-item.ccl { background: #fff8e6; }
-.cp-count-item.ccl .cp-count-num { color: #FFB000; }
-.cp-count-item.ccl .cp-count-lbl { color: #cc8d00; }
-.cp-count-item.cca { background: #fff0f0; }
-.cp-count-item.cca .cp-count-num { color: #FF4F4F; }
-.cp-count-item.cca .cp-count-lbl { color: #cc3f3f; }
-.cp-count-item.ccn { background: #f1f5f9; }
-.cp-count-item.ccn .cp-count-num { color: #64748b; }
-.cp-count-item.ccn .cp-count-lbl { color: #475569; }
-
-.cp-top3 { display: flex; gap: 12px; margin: 20px 40px 0; }
-.cp-rank-item {
-  flex: 1; padding: 12px 16px; border-radius: 12px;
-  display: flex; align-items: center; gap: 10px;
-  background: #f8fafc; border: 1px solid #e2e8f0;
-}
-.cp-rank-item.rank-filled { background: #e8fdf1; border-color: #00BF63; }
-.cp-rank-medal  { font-size: 26px; line-height: 1; }
-.cp-rank-name   { font-size: 16px; font-weight: 600; color: #1e293b; }
-.cp-rank-tag    { font-size: 11px; font-weight: 700; color: #00BF63; }
-.cp-rank-empty  { font-size: 14px; color: #94A3B8; }
-
-.cp-section-title {
-  margin: 20px 40px 12px;
-  font-size: 13px; font-weight: 600; color: #64748b;
-  text-transform: uppercase; letter-spacing: 0.06em;
-}
-.cp-grid {
-  display: grid; grid-template-columns: repeat(8, 1fr);
-  gap: 8px; margin: 0 40px; padding-bottom: 28px;
-}
-.cp-slot {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 4px; padding: 8px 4px; border-radius: 10px;
-  background: #f8fafc; border: 1px solid #e2e8f0;
-}
-.cp-slot svg          { width: 42px; height: 50px; }
-.cp-slot-num          { font-size: 11px; font-weight: 600; color: #1e293b; }
-.cp-slot-status       { font-size: 10px; font-weight: 500; color: #64748b; }
-.cp-slot-note         { font-size: 9px; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
-.cp-slot.sp           { background: #e8fdf1; border-color: #00BF63; }
-.cp-slot.sl           { background: #fff8e6; border-color: #FFB000; }
-.cp-slot.sa           { background: #fff0f0; border-color: #FF4F4F; }
-.cp-slot.sp .cp-slot-status { color: #00994f; }
-.cp-slot.sl .cp-slot-status { color: #cc8d00; }
-.cp-slot.sa .cp-slot-status { color: #cc3f3f; }
-
+/* [CLEANUP] #capture-panel และ .cp-* ถูกลบออก
+   screenshot.js ใช้ document.createElement("canvas") โดยตรง
+   ไม่เคย populate HTML ลงใน #capture-panel เลย → dead code */
 /* ─── Header responsive ─── */
 @media (max-width: 600px) {
   .count-pill          { padding: 3px 6px; min-width: 34px; }
